@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact — MK Kapsalon · Barbier in Zeist</title>
+  <meta name="description" content="Contact en route naar MK Kapsalon, Hoog Kanje 80, 3708 DL Zeist. Openingstijden, telefoon, e-mail en een handig contactformulier." />
+  <meta name="theme-color" content="#0b0b0d" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23c9a15a'/%3E%3Ctext x='50' y='68' font-family='Georgia,serif' font-size='52' font-weight='700' text-anchor='middle' fill='%231a1305'%3EMK%3C/text%3E%3C/svg%3E" />
+</head>
+<body>
+  <a href="#hoofdinhoud" class="skip-link">Naar inhoud</a>
+
+  <!-- HEADER -->
+  <header class="site-header" id="siteHeader">
+    <div class="container">
+      <a href="index.html" class="brand" aria-label="MK Kapsalon — home">
+        <span class="brand-mark" aria-hidden="true">MK</span>
+        <span class="brand-name"><b>MK Kapsalon</b><span>Barbier · Zeist</span></span>
+      </a>
+      <nav class="main-nav" id="mainNav" aria-label="Hoofdmenu">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="kapsels.html">Kapsels</a></li>
+          <li><a href="gallery.html">Galerij</a></li>
+          <li><a href="prijzen.html">Prijzen</a></li>
+          <li><a href="contact.html" aria-current="page">Contact</a></li>
+        </ul>
+        <a href="index.html#afspraak" class="btn btn-gold btn-block nav-cta-mobile" data-close-menu>Afspraak maken</a>
+      </nav>
+      <div class="header-actions">
+        <button class="btn-login" id="openLogin" type="button" aria-haspopup="dialog">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+          <span>Inloggen</span>
+        </button>
+        <a href="index.html#afspraak" class="btn btn-gold btn-afspraak">Afspraak maken</a>
+        <button class="nav-toggle" id="navToggle" type="button" aria-label="Menu openen" aria-expanded="false" aria-controls="mainNav"><span></span><span></span><span></span></button>
+      </div>
+    </div>
+  </header>
+  <div class="menu-backdrop" id="menuBackdrop" aria-hidden="true"></div>
+
+  <main id="hoofdinhoud">
+    <!-- PAGE HEADER -->
+    <header class="page-header">
+      <div class="container">
+        <nav class="breadcrumb" aria-label="Kruimelpad"><a href="index.html">Home</a> / <span>Contact</span></nav>
+        <span class="eyebrow reveal">Kom langs</span>
+        <h1 class="reveal" data-delay="1">Tot ziens<br />in Zeist.</h1>
+        <p class="section-lead reveal" data-delay="2">
+          Loop gerust binnen of maak vooraf een afspraak. Heb je een vraag?
+          Bel ons, of stuur een bericht via het formulier hieronder.
+        </p>
+      </div>
+    </header>
+
+    <!-- CONTACT -->
+    <section class="section" style="padding-top:clamp(40px,6vw,72px);">
+      <div class="container">
+        <div class="contact-layout">
+          <!-- Left: form -->
+          <div class="contact-form-card reveal">
+            <h3>Stuur een bericht</h3>
+            <p>We reageren meestal binnen één werkdag.</p>
+            <form id="contactForm" novalidate>
+              <div class="form-row">
+                <div class="field">
+                  <label for="c-naam">Naam <span class="req">*</span></label>
+                  <input type="text" id="c-naam" class="control" placeholder="Volledige naam" autocomplete="name" required />
+                </div>
+                <div class="field">
+                  <label for="c-tel">Telefoon</label>
+                  <input type="tel" id="c-tel" class="control" placeholder="06 12 34 56 78" autocomplete="tel" />
+                </div>
+              </div>
+              <div class="field full">
+                <label for="c-email">E-mail <span class="req">*</span></label>
+                <input type="email" id="c-email" class="control" placeholder="jij@voorbeeld.nl" autocomplete="email" required />
+              </div>
+              <div class="field full">
+                <label for="c-bericht">Bericht <span class="req">*</span></label>
+                <textarea id="c-bericht" class="control" placeholder="Waar kunnen we je mee helpen?" required></textarea>
+              </div>
+              <button type="submit" class="btn btn-gold btn-lg btn-block">Verstuur bericht</button>
+              <div class="booking-success" id="contactSuccess" role="status" aria-live="polite"></div>
+            </form>
+          </div>
+
+          <!-- Right: info + map -->
+          <div>
+            <div class="hours-card reveal" data-delay="1">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+                <h3 style="font-size:1.4rem;">Openingstijden</h3>
+                <span class="badge-open" id="openBadge"><span class="dot"></span> Nu geopend</span>
+              </div>
+              <ul class="hours-list" id="hoursList">
+                <li data-day="1"><span class="day">Maandag</span><span class="time">12:00 – 18:00</span></li>
+                <li data-day="2"><span class="day">Dinsdag</span><span class="time">09:00 – 18:00</span></li>
+                <li data-day="3"><span class="day">Woensdag</span><span class="time">09:00 – 18:00</span></li>
+                <li data-day="4"><span class="day">Donderdag</span><span class="time">09:00 – 18:00</span></li>
+                <li data-day="5"><span class="day">Vrijdag</span><span class="time">09:00 – 18:00</span></li>
+                <li data-day="6"><span class="day">Zaterdag</span><span class="time">09:00 – 18:00</span></li>
+                <li data-day="0"><span class="day">Zondag</span><span class="time closed">Gesloten</span></li>
+              </ul>
+              <div class="contact-lines" style="margin-top:20px;padding-top:20px;border-top:1px solid var(--line);">
+                <a class="contact-line" href="tel:+31306917033" style="padding-top:0;">
+                  <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg></span>
+                  <div><small>Telefoon</small><b>030 691 7033</b></div>
+                </a>
+                <a class="contact-line" href="mailto:info@mkkapsalon.nl">
+                  <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg></span>
+                  <div><small>E-mail</small><b>info@mkkapsalon.nl</b></div>
+                </a>
+                <div class="contact-line" style="padding-bottom:0;border-bottom:none;">
+                  <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
+                  <div><small>Adres</small><b>Hoog Kanje 80, 3708 DL Zeist</b></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="map-embed reveal" data-delay="2">
+              <iframe
+                title="Kaart — MK Kapsalon, Hoog Kanje 80 Zeist"
+                src="https://www.google.com/maps?q=Hoog+Kanje+80,+3708+DL+Zeist&output=embed"
+                loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            </div>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=Hoog+Kanje+80+3708+DL+Zeist" target="_blank" rel="noopener" class="btn btn-ghost btn-block" style="margin-top:16px;">
+              Route plannen
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </a>
+          </div>
+        </div>
+
+        <!-- CTA -->
+        <div class="cta-band reveal">
+          <h2>Liever meteen boeken?</h2>
+          <p>Maak online een afspraak en kies zelf je barbier en tijd.</p>
+          <div class="hero-cta">
+            <a href="index.html#afspraak" class="btn btn-gold btn-lg">Afspraak maken</a>
+            <a href="prijzen.html" class="btn btn-ghost btn-lg">Bekijk prijzen</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="index.html" class="brand" aria-label="MK Kapsalon — home">
+            <span class="brand-mark" aria-hidden="true">MK</span>
+            <span class="brand-name"><b>MK Kapsalon</b><span>Barbier · Zeist</span></span>
+          </a>
+          <p>Waar vakmanschap en verfijning samenkomen om u te transformeren. Uw Turkse barbier in Zeist sinds 2020.</p>
+          <div class="socials">
+            <a href="https://www.instagram.com/mkkapsalon/" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><line x1="17.5" y1="6.5" x2="17.5" y2="6.5"/></svg></a>
+            <a href="https://www.facebook.com/mkkapsalon/" target="_blank" rel="noopener" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
+            <a href="tel:+31306917033" aria-label="Bellen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg></a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h4>Menu</h4>
+          <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="kapsels.html">Kapsels</a></li>
+            <li><a href="gallery.html">Galerij</a></li>
+            <li><a href="prijzen.html">Prijzen</a></li>
+            <li><a href="contact.html">Contact</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Diensten</h4>
+          <ul>
+            <li><a href="prijzen.html">Knippen</a></li>
+            <li><a href="prijzen.html">Knippen + Baard</a></li>
+            <li><a href="prijzen.html">Hot Towel Scheren</a></li>
+            <li><a href="prijzen.html">Baard Modelleren</a></li>
+            <li><a href="prijzen.html">Kinderen</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Contact</h4>
+          <ul>
+            <li>Hoog Kanje 80</li>
+            <li>3708 DL Zeist</li>
+            <li><a href="tel:+31306917033">030 691 7033</a></li>
+            <li><a href="mailto:info@mkkapsalon.nl">info@mkkapsalon.nl</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© <span id="year">2026</span> MK Kapsalon · Alle rechten voorbehouden</span>
+        <span class="made">Ontworpen met vakmanschap · <a href="index.html">Privacy</a> · <a href="index.html">Voorwaarden</a></span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- LOGIN MODAL -->
+  <div class="modal" id="loginModal" role="dialog" aria-modal="true" aria-labelledby="loginTitle" aria-hidden="true">
+    <div class="modal-backdrop" data-close-modal></div>
+    <div class="modal-card">
+      <button class="modal-close" type="button" data-close-modal aria-label="Sluiten"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <span class="brand-mark" aria-hidden="true">MK</span>
+      <h3 id="loginTitle">Welkom terug</h3>
+      <p class="modal-sub">Log in om je afspraken te beheren en sneller te boeken.</p>
+      <form id="loginForm" novalidate>
+        <div class="field">
+          <label for="l-email">E-mailadres</label>
+          <div class="input-wrap"><span class="in-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg></span><input type="email" id="l-email" class="control" placeholder="jij@voorbeeld.nl" autocomplete="email" required /></div>
+        </div>
+        <div class="field">
+          <label for="l-pass">Wachtwoord</label>
+          <div class="input-wrap"><span class="in-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span><input type="password" id="l-pass" class="control" placeholder="••••••••" autocomplete="current-password" required /></div>
+        </div>
+        <div class="form-forgot"><a href="#" data-close-modal>Wachtwoord vergeten?</a></div>
+        <button type="submit" class="btn btn-gold btn-block btn-lg">Inloggen</button>
+      </form>
+      <div class="modal-divider">of</div>
+      <p class="modal-alt">Nog geen account? <a href="#" data-close-modal>Registreren</a></p>
+    </div>
+  </div>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

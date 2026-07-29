@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Galerij — MK Kapsalon · Ons werk in Zeist</title>
+  <meta name="description" content="Bekijk het werk van MK Kapsalon in Zeist: fades, baardwerk, kinderkapsels en meer. Laat je inspireren en maak een afspraak." />
+  <meta name="theme-color" content="#0b0b0d" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23c9a15a'/%3E%3Ctext x='50' y='68' font-family='Georgia,serif' font-size='52' font-weight='700' text-anchor='middle' fill='%231a1305'%3EMK%3C/text%3E%3C/svg%3E" />
+</head>
+<body>
+  <a href="#hoofdinhoud" class="skip-link">Naar inhoud</a>
+
+  <!-- HEADER -->
+  <header class="site-header" id="siteHeader">
+    <div class="container">
+      <a href="index.html" class="brand" aria-label="MK Kapsalon — home">
+        <span class="brand-mark" aria-hidden="true">MK</span>
+        <span class="brand-name"><b>MK Kapsalon</b><span>Barbier · Zeist</span></span>
+      </a>
+      <nav class="main-nav" id="mainNav" aria-label="Hoofdmenu">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="kapsels.html">Kapsels</a></li>
+          <li><a href="gallery.html" aria-current="page">Galerij</a></li>
+          <li><a href="prijzen.html">Prijzen</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+        <a href="index.html#afspraak" class="btn btn-gold btn-block nav-cta-mobile" data-close-menu>Afspraak maken</a>
+      </nav>
+      <div class="header-actions">
+        <button class="btn-login" id="openLogin" type="button" aria-haspopup="dialog">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+          <span>Inloggen</span>
+        </button>
+        <a href="index.html#afspraak" class="btn btn-gold btn-afspraak">Afspraak maken</a>
+        <button class="nav-toggle" id="navToggle" type="button" aria-label="Menu openen" aria-expanded="false" aria-controls="mainNav"><span></span><span></span><span></span></button>
+      </div>
+    </div>
+  </header>
+  <div class="menu-backdrop" id="menuBackdrop" aria-hidden="true"></div>
+
+  <main id="hoofdinhoud">
+    <!-- PAGE HEADER -->
+    <header class="page-header">
+      <div class="container">
+        <nav class="breadcrumb" aria-label="Kruimelpad">
+          <a href="index.html">Home</a> / <span>Galerij</span>
+        </nav>
+        <span class="eyebrow reveal">Ons werk</span>
+        <h1 class="reveal" data-delay="1">Elke kapsel<br />een statement.</h1>
+        <p class="section-lead reveal" data-delay="2">
+          Een selectie uit het werk van onze barbiers — van scherpe fades en
+          getextureerde crops tot verzorgd baardwerk. Klik op een foto om te vergroten.
+        </p>
+        <div class="ph-stats reveal" data-delay="3">
+          <div class="trust-item"><b>1.200+</b><span>Kapsels per jaar*</span></div>
+          <div class="trust-item"><b>628</b><span>Volgers op Instagram</span></div>
+          <div class="trust-item"><b>Sinds 2020</b><span>In hartje Zeist</span></div>
+        </div>
+      </div>
+    </header>
+
+    <!-- GALLERY -->
+    <section class="section" style="padding-top:clamp(40px,6vw,72px);">
+      <div class="container">
+        <div class="filter-bar reveal" role="group" aria-label="Filter galerij">
+          <button class="filter-chip active" data-filter="all" type="button">Alles</button>
+          <button class="filter-chip" data-filter="fade" type="button">Fades</button>
+          <button class="filter-chip" data-filter="kinderen" type="button">Kinderen</button>
+          <button class="filter-chip" data-filter="volwassenen" type="button">Volwassenen</button>
+          <button class="filter-chip" data-filter="baard" type="button">Baard</button>
+        </div>
+
+        <div class="masonry" id="masonry">
+          <button class="g-card reveal" data-cat="volwassenen fade baard" data-caption="Slick-back met skin fade &amp; verzorgde baard">
+            <img src="assets/insta/ig5.jpg" alt="Slick-back met skin fade en baard" loading="lazy" />
+            <div class="g-meta"><span class="g-title">Slick-back &amp; Baard</span><span class="g-zoom" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg></span></div>
+          </button>
+          <button class="g-card reveal" data-cat="kinderen fade" data-caption="Quiff met strakke fade — jeugd">
+            <img src="assets/insta/ig2.jpg" alt="Quiff met strakke fade" loading="lazy" />
+            <div class="g-meta"><span class="g-title">Quiff &amp; Fade</span><span class="g-zoom" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg></span></div>
+          </button>
+          <button class="g-card reveal" data-cat="volwassenen fade" data-caption="High-top afro met scheerlijnen en fade">
+            <img src="assets/insta/ig9.jpg" alt="High-top afro met scheerlijnen en fade" loading="lazy" />
+            <div class="g-meta"><span class="g-title">Afro &amp; Design</span><span class="g-zoom" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg></span></div>
+          </button>
+          <button class="g-card reveal" data-cat="kinderen fade" data-caption="Getextureerde crop met taper fade">
+            <img src="assets/insta/ig7.jpg" alt="Getextureerde crop met taper fade" loading="lazy" />
+            <div class="g-meta"><span class="g-title">Textured Crop</span><span class="g-zoom" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg></span></div>
+          </button>
+          <button class="g-card reveal" data-cat="kinderen fade" data-caption="Side part met shaved line en fade">
+            <img src="assets/insta/ig4.jpg" alt="Side part met shaved line en fade" loading="lazy" />
+            <div class="g-meta"><span class="g-title">Side Part</span><span class="g-zoom" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg></span></div>
+          </button>
+          <button class="g-card reveal" data-cat="volwassenen fade" data-caption="Krullen met nette drop fade">
+            <img src="assets/insta/ig8.jpg" alt="Krullen met drop fade" loading="lazy" />
+            <div class="g-meta"><span class="g-title">Curly Fade</span><span class="g-zoom" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg></span></div>
+          </button>
+          <button class="g-card reveal" data-cat="kinderen fade" data-caption="Korte crop met hard part en skin fade">
+            <img src="assets/insta/ig3.jpg" alt="Crop met hard part en skin fade" loading="lazy" />
+            <div class="g-meta"><span class="g-title">Crop &amp; Line</span><span class="g-zoom" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg></span></div>
+          </button>
+          <button class="g-card reveal" data-cat="kinderen" data-caption="Getextureerde slick-back met taper">
+            <img src="assets/insta/ig11.jpg" alt="Getextureerde slick-back met taper" loading="lazy" />
+            <div class="g-meta"><span class="g-title">Slick Textured</span><span class="g-zoom" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg></span></div>
+          </button>
+          <button class="g-card reveal" data-cat="volwassenen" data-caption="Klassieke korte crop cut">
+            <img src="assets/insta/ig6.jpg" alt="Korte crop cut" loading="lazy" />
+            <div class="g-meta"><span class="g-title">Classic Crop</span><span class="g-zoom" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg></span></div>
+          </button>
+          <button class="g-card reveal" data-cat="kinderen fade" data-caption="Blonde side part met fade">
+            <img src="assets/insta/ig10.jpg" alt="Blonde side part met fade" loading="lazy" />
+            <div class="g-meta"><span class="g-title">Blond Side Part</span><span class="g-zoom" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg></span></div>
+          </button>
+        </div>
+
+        <p class="form-note" style="margin-top:20px;text-align:center;">
+          Meer werk? Volg <a href="https://www.instagram.com/mkkapsalon/" target="_blank" rel="noopener" style="color:var(--gold);">@mkkapsalon</a> op Instagram.
+        </p>
+
+        <!-- CTA -->
+        <div class="cta-band reveal">
+          <h2>Klaar voor jouw beste look?</h2>
+          <p>Kies je dienst en barbier, en reserveer in minder dan een minuut.</p>
+          <div class="hero-cta">
+            <a href="index.html#afspraak" class="btn btn-gold btn-lg">Afspraak maken</a>
+            <a href="kapsels.html" class="btn btn-ghost btn-lg">Bekijk kapsels</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- LIGHTBOX -->
+  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Foto vergroot">
+    <div class="lightbox-backdrop" data-lb-close></div>
+    <button class="lb-close" type="button" data-lb-close aria-label="Sluiten">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <button class="lb-btn lb-prev" type="button" aria-label="Vorige"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <button class="lb-btn lb-next" type="button" aria-label="Volgende"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+    <div class="lightbox-content">
+      <img id="lbImg" src="" alt="" />
+      <div class="lb-caption" id="lbCaption"></div>
+      <div class="lb-counter" id="lbCounter"></div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="index.html" class="brand" aria-label="MK Kapsalon — home">
+            <span class="brand-mark" aria-hidden="true">MK</span>
+            <span class="brand-name"><b>MK Kapsalon</b><span>Barbier · Zeist</span></span>
+          </a>
+          <p>Waar vakmanschap en verfijning samenkomen om u te transformeren. Uw Turkse barbier in Zeist sinds 2020.</p>
+          <div class="socials">
+            <a href="https://www.instagram.com/mkkapsalon/" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><line x1="17.5" y1="6.5" x2="17.5" y2="6.5"/></svg></a>
+            <a href="https://www.facebook.com/mkkapsalon/" target="_blank" rel="noopener" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
+            <a href="tel:+31306917033" aria-label="Bellen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg></a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h4>Menu</h4>
+          <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="kapsels.html">Kapsels</a></li>
+            <li><a href="gallery.html">Galerij</a></li>
+            <li><a href="prijzen.html">Prijzen</a></li>
+            <li><a href="contact.html">Contact</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Diensten</h4>
+          <ul>
+            <li><a href="prijzen.html">Knippen</a></li>
+            <li><a href="prijzen.html">Knippen + Baard</a></li>
+            <li><a href="prijzen.html">Hot Towel Scheren</a></li>
+            <li><a href="prijzen.html">Baard Modelleren</a></li>
+            <li><a href="prijzen.html">Kinderen</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Contact</h4>
+          <ul>
+            <li>Hoog Kanje 80</li>
+            <li>3708 DL Zeist</li>
+            <li><a href="tel:+31306917033">030 691 7033</a></li>
+            <li><a href="mailto:info@mkkapsalon.nl">info@mkkapsalon.nl</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© <span id="year">2026</span> MK Kapsalon · Alle rechten voorbehouden</span>
+        <span class="made">Ontworpen met vakmanschap · <a href="index.html">Privacy</a> · <a href="index.html">Voorwaarden</a></span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- LOGIN MODAL -->
+  <div class="modal" id="loginModal" role="dialog" aria-modal="true" aria-labelledby="loginTitle" aria-hidden="true">
+    <div class="modal-backdrop" data-close-modal></div>
+    <div class="modal-card">
+      <button class="modal-close" type="button" data-close-modal aria-label="Sluiten"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <span class="brand-mark" aria-hidden="true">MK</span>
+      <h3 id="loginTitle">Welkom terug</h3>
+      <p class="modal-sub">Log in om je afspraken te beheren en sneller te boeken.</p>
+      <form id="loginForm" novalidate>
+        <div class="field">
+          <label for="l-email">E-mailadres</label>
+          <div class="input-wrap"><span class="in-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg></span><input type="email" id="l-email" class="control" placeholder="jij@voorbeeld.nl" autocomplete="email" required /></div>
+        </div>
+        <div class="field">
+          <label for="l-pass">Wachtwoord</label>
+          <div class="input-wrap"><span class="in-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span><input type="password" id="l-pass" class="control" placeholder="••••••••" autocomplete="current-password" required /></div>
+        </div>
+        <div class="form-forgot"><a href="#" data-close-modal>Wachtwoord vergeten?</a></div>
+        <button type="submit" class="btn btn-gold btn-block btn-lg">Inloggen</button>
+      </form>
+      <div class="modal-divider">of</div>
+      <p class="modal-alt">Nog geen account? <a href="#" data-close-modal>Registreren</a></p>
+    </div>
+  </div>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
