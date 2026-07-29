@@ -26,6 +26,7 @@
   --gold-deep: #a97b3e;
   --copper: #b87333;
   --gold-grad: linear-gradient(135deg, #f0d79c 0%, #cfa863 42%, #a97b3e 100%);
+  --gold-text-grad: var(--gold-grad);
   --gold-glow: rgba(201, 161, 90, 0.35);
 
   /* Feedback */
@@ -135,7 +136,7 @@ h1, h2, h3, h4 {
 }
 
 .gold-text {
-  background: var(--gold-grad);
+  background: var(--gold-text-grad);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -351,6 +352,33 @@ section { position: relative; }
 }
 .btn-login svg { width: 17px; height: 17px; }
 .btn-login:hover { color: var(--gold-hi); background: rgba(255, 255, 255, 0.05); }
+
+/* Theme + language tool buttons */
+.tool-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line-strong);
+  color: var(--text-soft);
+  transition: color 0.25s var(--ease), border-color 0.25s var(--ease), background 0.25s var(--ease);
+}
+.tool-btn:hover { color: var(--gold-hi); border-color: var(--gold); }
+.tool-btn svg { width: 18px; height: 18px; }
+.lang-btn {
+  width: auto;
+  min-width: 40px;
+  padding: 0 12px;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
+}
+.ic-moon { display: none; }
+.ic-sun { display: block; }
+:root[data-theme="light"] .ic-sun { display: none; }
+:root[data-theme="light"] .ic-moon { display: block; }
 
 /* Hamburger */
 .nav-toggle {
@@ -1580,6 +1608,49 @@ textarea.control { resize: vertical; min-height: 130px; }
   .masonry { columns: 1; }
   .lb-btn { width: 44px; height: 44px; }
 }
+
+/* ============================================================
+   LIGHT THEME
+   ============================================================ */
+body {
+  transition: background-color 0.45s var(--ease), color 0.45s var(--ease);
+}
+
+:root[data-theme="light"] {
+  --bg: #f7f4ee;
+  --bg-2: #efe9df;
+  --surface: #ffffff;
+  --surface-2: #f7f3ec;
+  --surface-3: #ece5d8;
+  --line: rgba(45, 34, 18, 0.10);
+  --line-strong: rgba(45, 34, 18, 0.20);
+  --text: #1e1912;
+  --text-soft: #4b4236;
+  --muted: #756b5c;
+  --muted-2: #a99e8c;
+  --gold: #9a6a1c;
+  --gold-hi: #7c5413;
+  --gold-deep: #6f4a15;
+  --gold-text-grad: linear-gradient(135deg, #b07f22 0%, #8a5c16 55%, #714711 100%);
+  --gold-glow: rgba(176, 127, 46, 0.28);
+  --shadow-sm: 0 2px 10px rgba(60, 45, 20, 0.08);
+  --shadow-md: 0 18px 44px rgba(60, 45, 20, 0.14);
+  --shadow-gold: 0 14px 32px -12px rgba(169, 123, 62, 0.45);
+}
+
+/* Fixes for spots that hardcode dark values */
+:root[data-theme="light"] .site-header.scrolled {
+  background: rgba(247, 244, 238, 0.85);
+  box-shadow: 0 8px 30px rgba(60, 45, 20, 0.10);
+}
+:root[data-theme="light"] .hero-bg::after {
+  background: radial-gradient(120% 100% at 50% 0%, transparent 62%, rgba(60, 45, 20, 0.05));
+}
+:root[data-theme="light"] .btn-login:hover,
+:root[data-theme="light"] .main-nav a:hover { background: rgba(45, 34, 18, 0.05); }
+:root[data-theme="light"] .feature:hover,
+:root[data-theme="light"] .socials a:hover { background: rgba(45, 34, 18, 0.03); }
+:root[data-theme="light"] .map-embed iframe { filter: contrast(1.02); }
 
 /* ---------- Reduced motion ---------- */
 @media (prefers-reduced-motion: reduce) {
