@@ -1150,8 +1150,11 @@ select.control {
   .main-nav a::after { display: none; }
   .main-nav a:hover { background: rgba(255,255,255,0.05); }
   .nav-toggle { display: block; z-index: 110; }
-  .header-actions .btn-login span { display: none; }
+  .header-actions { gap: 8px; }
+  .header-actions .tool-btn,
+  .header-actions .btn-login,
   .header-actions .btn-afspraak { display: none; }
+  .menu-tools { display: flex !important; }
   .menu-backdrop {
     position: fixed; inset: 0; z-index: 90;
     background: rgba(6,6,8,0.6);
@@ -1169,6 +1172,15 @@ select.control {
 }
 
 .nav-cta-mobile { display: none; }
+.menu-tools {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+.menu-tools .login-open { flex: 1; }
 
 @media (max-width: 420px) {
   .hero-trust .trust-item b { font-size: 1.25rem; }

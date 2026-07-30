@@ -256,11 +256,11 @@
 
   /* ---------- Login modal ---------- */
   var modal = document.getElementById("loginModal");
-  var openLoginBtn = document.getElementById("openLogin");
   var lastFocused = null;
 
   function openModal() {
     if (!modal) return;
+    closeMenu();
     lastFocused = document.activeElement;
     modal.classList.add("open");
     modal.setAttribute("aria-hidden", "false");
@@ -275,7 +275,9 @@
     document.body.style.overflow = "";
     if (lastFocused) lastFocused.focus();
   }
-  if (openLoginBtn) openLoginBtn.addEventListener("click", openModal);
+  document.querySelectorAll(".login-open").forEach(function (el) {
+    el.addEventListener("click", openModal);
+  });
   document.querySelectorAll("[data-close-modal]").forEach(function (el) {
     el.addEventListener("click", closeModal);
   });
@@ -434,7 +436,7 @@
   function applyTheme(tm) {
     document.documentElement.setAttribute("data-theme", tm);
     try { localStorage.setItem(THEME_KEY, tm); } catch (e) {}
-    document.querySelectorAll("#themeToggle").forEach(function (b) {
+    document.querySelectorAll(".theme-toggle").forEach(function (b) {
       b.setAttribute("aria-label",
         tm === "dark" ? tr("Schakel naar licht thema", "Switch to light theme")
                       : tr("Schakel naar donker thema", "Switch to dark theme"));
@@ -442,7 +444,7 @@
     });
   }
   applyTheme(document.documentElement.getAttribute("data-theme") || "dark");
-  document.querySelectorAll("#themeToggle").forEach(function (btn) {
+  document.querySelectorAll(".theme-toggle").forEach(function (btn) {
     btn.addEventListener("click", function () {
       applyTheme(document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark");
     });
@@ -729,7 +731,7 @@
     });
     document.documentElement.setAttribute("lang", lang);
     try { localStorage.setItem(LANG_KEY, lang); } catch (e) {}
-    document.querySelectorAll("#langToggle").forEach(function (b) {
+    document.querySelectorAll(".lang-toggle").forEach(function (b) {
       b.textContent = lang === "en" ? "NL" : "EN";
       b.setAttribute("aria-label", lang === "en" ? "Schakel naar Nederlands" : "Switch to English");
     });
@@ -738,7 +740,7 @@
   }
   i18nBuild();
   i18nApply(document.documentElement.getAttribute("lang") === "en" ? "en" : "nl");
-  document.querySelectorAll("#langToggle").forEach(function (btn) {
+  document.querySelectorAll(".lang-toggle").forEach(function (btn) {
     btn.addEventListener("click", function () {
       i18nApply(document.documentElement.getAttribute("lang") === "en" ? "nl" : "en");
     });
