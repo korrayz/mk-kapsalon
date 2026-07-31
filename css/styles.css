@@ -1126,6 +1126,7 @@ select.control {
   .booking-grid { grid-template-columns: 1fr; }
   .booking-info { position: static; }
   .visit-grid { grid-template-columns: 1fr; }
+  .contact-layout { grid-template-columns: 1fr !important; }
   .footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
   .footer-brand { grid-column: 1 / -1; }
 }
