@@ -337,6 +337,7 @@ async function loadCustomers() {
           <td>${c.no_show_count > 0 ? `<span style="color:var(--red)">${c.no_show_count}</span>` : '0'}</td>
           <td>${c.open_penalty_cents > 0 ? `<b style="color:var(--orange)">${eur(c.open_penalty_cents)}</b>` : '—'}</td>
           <td>
+            <button class="btn small btn-ghost" data-editc="${c.id}">Düzenle</button>
             ${c.blacklisted
               ? `<button class="btn small" data-unbl="${c.id}">Listeden çıkar</button>`
               : `<button class="btn small danger" data-bl="${c.id}" data-name="${esc(c.name)}">Kara listeye ekle</button>`}
@@ -344,6 +345,23 @@ async function loadCustomers() {
         </tr>`).join('')}
     </table>` : '<div class="empty">Müşteri yok</div>';
   bindBlacklistButtons($('#custList'), loadCustomers);
+  $('#custList').querySelectorAll('[data-editc]').forEach((b) => b.addEventListener('click', () => {
+    const c = rows.find((x) => x.id == b.dataset.editc);
+    openModal(`
+      <h3>Müşteriyi Düzenle</h3>
+      <div class="form-grid">
+        <label>İsim<input id="ecName" value="${esc(c.name)}" /></label>
+        <label>Telefon<input id="ecPhone" value="${esc(c.phone)}" /></label>
+        <label>Not<input id="ecNotes" value="${esc(c.notes)}" /></label>
+        <button class="btn btn-gold" id="ecSave">Kaydet</button>
+      </div>`);
+    $('#ecSave').addEventListener('click', async () => {
+      try {
+        await api('/customers/' + c.id, { method: 'PATCH', body: { name: $('#ecName').value, phone: $('#ecPhone').value, notes: $('#ecNotes').value } });
+        closeModal(); toast('Müşteri güncellendi'); loadCustomers();
+      } catch (e) { toast(e.message, true); }
+    });
+  }));
 }
 
 function bindBlacklistButtons(root, refresh) {
