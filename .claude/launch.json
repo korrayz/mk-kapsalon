@@ -2,10 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "mk-kapsalon",
-      "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "5500"],
-      "port": 5500
+      "name": "admin",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["admin/server.js"],
+      "port": 4500
     }
   ]
 }
