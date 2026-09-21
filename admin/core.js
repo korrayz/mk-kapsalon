@@ -113,7 +113,8 @@ function checkToken(token) {
   return sig.length === good.length && crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(good));
 }
 async function adminPassword() {
-  return process.env.ADMIN_PASSWORD || (await getSetting('admin_password')) || 'mk2026';
+  // Panelden değiştirilen şifre (DB) öncelikli; yoksa env, o da yoksa varsayılan
+  return (await getSetting('admin_password')) || process.env.ADMIN_PASSWORD || 'mk2026';
 }
 
 // ---------- Helpers ----------
@@ -332,6 +333,79 @@ async function handle(method, pathname, query, body, token) {
     if (!['open', 'paid', 'waived'].includes(b.status)) return { status: 400, data: { error: 'Geçersiz durum' } };
     await run('UPDATE penalties SET status = ?, resolved_at = ? WHERE id = ?',
       [b.status, b.status === 'open' ? null : new Date().toISOString(), m[1]]);
+    return { status: 200, data: { ok: true } };
+  }
+
+  if (method === 'GET' && pathname === '/barbers') {
+    return { status: 200, data: await q('SELECT * FROM barbers ORDER BY active DESC, id') };
+  }
+  if (method === 'GET' && pathname === '/services') {
+    return { status: 200, data: await q('SELECT * FROM services ORDER BY active DESC, id') };
+  }
+
+  if (method === 'POST' && pathname === '/barbers') {
+    const name = ((body || {}).name || '').trim();
+    if (!name) return { status: 400, data: { error: 'İsim gerekli' } };
+    const r = await run('INSERT INTO barbers(name) VALUES (?)', [name]);
+    return { status: 201, data: await one('SELECT * FROM barbers WHERE id = ?', [r.lastId]) };
+  }
+
+  if ((m = pathname.match(/^\/barbers\/(\d+)$/)) && method === 'PATCH') {
+    const b = body || {};
+    if (b.name !== undefined) {
+      if (!String(b.name).trim()) return { status: 400, data: { error: 'İsim boş olamaz' } };
+      await run('UPDATE barbers SET name = ? WHERE id = ?', [String(b.name).trim(), m[1]]);
+    }
+    if (b.active !== undefined) {
+      if (!b.active) {
+        const cnt = (await one("SELECT COUNT(*) c FROM barbers WHERE active = 1 AND id != ?", [m[1]])).c;
+        if (!cnt) return { status: 400, data: { error: 'En az bir berber aktif kalmalı' } };
+      }
+      await run('UPDATE barbers SET active = ? WHERE id = ?', [b.active ? 1 : 0, m[1]]);
+    }
+    return { status: 200, data: await one('SELECT * FROM barbers WHERE id = ?', [m[1]]) };
+  }
+
+  if (method === 'POST' && pathname === '/services') {
+    const b = body || {};
+    if (!b.name || !String(b.name).trim() || !Number(b.price_cents) || !Number(b.duration_min)) {
+      return { status: 400, data: { error: 'İsim, fiyat ve süre gerekli' } };
+    }
+    const r = await run('INSERT INTO services(name, price_cents, duration_min) VALUES (?,?,?)',
+      [String(b.name).trim(), Number(b.price_cents), Number(b.duration_min)]);
+    return { status: 201, data: await one('SELECT * FROM services WHERE id = ?', [r.lastId]) };
+  }
+
+  if ((m = pathname.match(/^\/services\/(\d+)$/)) && method === 'PATCH') {
+    const b = body || {};
+    if (b.name !== undefined) await run('UPDATE services SET name = ? WHERE id = ?', [String(b.name).trim(), m[1]]);
+    if (b.price_cents !== undefined) await run('UPDATE services SET price_cents = ? WHERE id = ?', [Number(b.price_cents), m[1]]);
+    if (b.duration_min !== undefined) await run('UPDATE services SET duration_min = ? WHERE id = ?', [Number(b.duration_min), m[1]]);
+    if (b.active !== undefined) await run('UPDATE services SET active = ? WHERE id = ?', [b.active ? 1 : 0, m[1]]);
+    return { status: 200, data: await one('SELECT * FROM services WHERE id = ?', [m[1]]) };
+  }
+
+  if (method === 'PATCH' && pathname === '/settings') {
+    const b = body || {};
+    if (b.no_show_fee_cents !== undefined) {
+      const fee = Number(b.no_show_fee_cents);
+      if (!(fee >= 0)) return { status: 400, data: { error: 'Geçersiz tutar' } };
+      await setSetting('no_show_fee_cents', fee);
+    }
+    if (b.hours !== undefined) {
+      for (let d = 0; d <= 6; d++) {
+        const h = b.hours[d];
+        if (h !== null && (!Array.isArray(h) || !/^\d{2}:\d{2}$/.test(h[0]) || !/^\d{2}:\d{2}$/.test(h[1]))) {
+          return { status: 400, data: { error: 'Geçersiz saat formatı' } };
+        }
+      }
+      await setSetting('hours', JSON.stringify(b.hours));
+    }
+    if (b.admin_password !== undefined) {
+      const p = String(b.admin_password).trim();
+      if (p.length < 6) return { status: 400, data: { error: 'Şifre en az 6 karakter olmalı' } };
+      await setSetting('admin_password', p);
+    }
     return { status: 200, data: { ok: true } };
   }
 

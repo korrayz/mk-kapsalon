@@ -126,7 +126,7 @@ document.querySelectorAll('.nav-btn').forEach((btn) => {
     document.querySelectorAll('.tab').forEach((t) => t.classList.remove('active'));
     btn.classList.add('active');
     $('#tab-' + btn.dataset.tab).classList.add('active');
-    ({ agenda: loadAgenda, customers: loadCustomers, penalties: loadPenalties, blacklist: loadBlacklist }[btn.dataset.tab] || (() => {}))();
+    ({ agenda: loadAgenda, customers: loadCustomers, penalties: loadPenalties, blacklist: loadBlacklist, settings: loadSettings }[btn.dataset.tab] || (() => {}))();
   });
 });
 
@@ -408,6 +408,151 @@ async function loadBlacklist() {
     </table>` : '<div class="empty">Kara liste boş. Müşteriler sekmesinden kişi ekleyebilirsin.</div>';
   bindBlacklistButtons($('#blackList'), loadBlacklist);
 }
+
+// ---------- Settings ----------
+const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0]; // Pzt..Paz
+async function refreshMeta() {
+  META = await api('/meta');
+  fillSelects();
+}
+
+async function loadSettings() {
+  const [barbers, services] = await Promise.all([api('/barbers'), api('/services')]);
+
+  $('#setBarbers').innerHTML = barbers.map((b) => `
+    <div class="set-row ${b.active ? '' : 'inactive'}">
+      <span class="grow">${esc(b.name)}${b.active ? '' : ' <span class="muted">(pasif)</span>'}</span>
+      ${b.active ? `
+        <button class="btn small btn-ghost" data-rename="${b.id}" data-name="${esc(b.name)}">Adlandır</button>
+        <button class="btn small btn-ghost danger" data-deact="${b.id}" data-name="${esc(b.name)}">Kaldır</button>` : `
+        <button class="btn small" data-react="${b.id}">Geri al</button>`}
+    </div>`).join('');
+  $('#setBarbers').querySelectorAll('[data-rename]').forEach((b) => b.addEventListener('click', async () => {
+    const name = await uiPrompt(`"${b.dataset.name}" için yeni isim:`);
+    if (!name || !name.trim()) return;
+    try { await api('/barbers/' + b.dataset.rename, { method: 'PATCH', body: { name } }); await refreshMeta(); loadSettings(); }
+    catch (e) { toast(e.message, true); }
+  }));
+  $('#setBarbers').querySelectorAll('[data-deact]').forEach((b) => b.addEventListener('click', async () => {
+    if (!(await uiConfirm(`"${b.dataset.name}" listeden kaldırılacak.\nGeçmiş randevuları silinmez, yeni randevu alınamaz.`))) return;
+    try { await api('/barbers/' + b.dataset.deact, { method: 'PATCH', body: { active: false } }); await refreshMeta(); loadSettings(); toast('Berber kaldırıldı'); }
+    catch (e) { toast(e.message, true); }
+  }));
+  $('#setBarbers').querySelectorAll('[data-react]').forEach((b) => b.addEventListener('click', async () => {
+    try { await api('/barbers/' + b.dataset.react, { method: 'PATCH', body: { active: true } }); await refreshMeta(); loadSettings(); }
+    catch (e) { toast(e.message, true); }
+  }));
+
+  $('#setServices').innerHTML = `
+    <table>
+      <tr><th>Hizmet</th><th>Fiyat</th><th>Süre</th><th></th></tr>
+      ${services.map((s) => `
+        <tr class="${s.active ? '' : 'inactive'}" style="${s.active ? '' : 'opacity:.45'}">
+          <td>${esc(s.name)}${s.active ? '' : ' <span class="muted">(pasif)</span>'}</td>
+          <td>${eur(s.price_cents)}</td>
+          <td>${s.duration_min} dk</td>
+          <td style="text-align:right">
+            ${s.active ? `
+              <button class="btn small btn-ghost" data-editsvc="${s.id}">Düzenle</button>
+              <button class="btn small btn-ghost danger" data-deactsvc="${s.id}" data-name="${esc(s.name)}">Kaldır</button>` : `
+              <button class="btn small" data-reactsvc="${s.id}">Geri al</button>`}
+          </td>
+        </tr>`).join('')}
+    </table>`;
+  $('#setServices').querySelectorAll('[data-editsvc]').forEach((b) => b.addEventListener('click', () => {
+    const s = services.find((x) => x.id == b.dataset.editsvc);
+    openModal(`
+      <h3>Hizmeti Düzenle</h3>
+      <div class="form-grid">
+        <label>İsim<input id="esName" value="${esc(s.name)}" /></label>
+        <div class="form-row">
+          <label>Fiyat (€)<input type="number" id="esPrice" min="0" step="0.5" value="${(s.price_cents / 100).toFixed(2)}" /></label>
+          <label>Süre (dk)<input type="number" id="esDur" min="5" step="5" value="${s.duration_min}" /></label>
+        </div>
+        <button class="btn btn-gold" id="esSave">Kaydet</button>
+      </div>`);
+    $('#esSave').addEventListener('click', async () => {
+      try {
+        await api('/services/' + s.id, { method: 'PATCH', body: {
+          name: $('#esName').value,
+          price_cents: Math.round(Number($('#esPrice').value) * 100),
+          duration_min: Number($('#esDur').value),
+        } });
+        closeModal(); await refreshMeta(); loadSettings(); toast('Hizmet güncellendi');
+      } catch (e) { toast(e.message, true); }
+    });
+  }));
+  $('#setServices').querySelectorAll('[data-deactsvc]').forEach((b) => b.addEventListener('click', async () => {
+    if (!(await uiConfirm(`"${b.dataset.name}" hizmeti listeden kaldırılacak. Onaylıyor musun?`))) return;
+    try { await api('/services/' + b.dataset.deactsvc, { method: 'PATCH', body: { active: false } }); await refreshMeta(); loadSettings(); }
+    catch (e) { toast(e.message, true); }
+  }));
+  $('#setServices').querySelectorAll('[data-reactsvc]').forEach((b) => b.addEventListener('click', async () => {
+    try { await api('/services/' + b.dataset.reactsvc, { method: 'PATCH', body: { active: true } }); await refreshMeta(); loadSettings(); }
+    catch (e) { toast(e.message, true); }
+  }));
+
+  $('#setHours').innerHTML = DAY_ORDER.map((d) => {
+    const h = META.hours[d];
+    return `
+    <div class="hours-row" data-day="${d}">
+      <span class="day-name">${DAYS_TR[d]}</span>
+      <input type="time" class="h-open" value="${h ? h[0] : '09:00'}" ${h ? '' : 'disabled'} />
+      <span class="muted">–</span>
+      <input type="time" class="h-close" value="${h ? h[1] : '18:00'}" ${h ? '' : 'disabled'} />
+      <label class="closed-toggle"><input type="checkbox" class="h-closed" ${h ? '' : 'checked'} /> Kapalı</label>
+    </div>`;
+  }).join('');
+  $('#setHours').querySelectorAll('.h-closed').forEach((cb) => cb.addEventListener('change', () => {
+    const row = cb.closest('.hours-row');
+    row.querySelector('.h-open').disabled = cb.checked;
+    row.querySelector('.h-close').disabled = cb.checked;
+  }));
+
+  $('#setFee').value = (META.no_show_fee_cents / 100).toFixed(2);
+}
+
+$('#addBarberBtn').addEventListener('click', async () => {
+  const name = $('#newBarberName').value.trim();
+  if (!name) return toast('Berber adı yaz', true);
+  try { await api('/barbers', { method: 'POST', body: { name } }); $('#newBarberName').value = ''; await refreshMeta(); loadSettings(); toast('Berber eklendi'); }
+  catch (e) { toast(e.message, true); }
+});
+$('#addSvcBtn').addEventListener('click', async () => {
+  try {
+    await api('/services', { method: 'POST', body: {
+      name: $('#newSvcName').value,
+      price_cents: Math.round(Number($('#newSvcPrice').value) * 100),
+      duration_min: Number($('#newSvcDur').value),
+    } });
+    $('#newSvcName').value = ''; $('#newSvcPrice').value = ''; $('#newSvcDur').value = '';
+    await refreshMeta(); loadSettings(); toast('Hizmet eklendi');
+  } catch (e) { toast(e.message, true); }
+});
+$('#saveHoursBtn').addEventListener('click', async () => {
+  const hours = {};
+  $('#setHours').querySelectorAll('.hours-row').forEach((row) => {
+    const d = row.dataset.day;
+    hours[d] = row.querySelector('.h-closed').checked
+      ? null
+      : [row.querySelector('.h-open').value, row.querySelector('.h-close').value];
+  });
+  try { await api('/settings', { method: 'PATCH', body: { hours } }); await refreshMeta(); toast('Çalışma saatleri kaydedildi'); }
+  catch (e) { toast(e.message, true); }
+});
+$('#saveFeeBtn').addEventListener('click', async () => {
+  try {
+    await api('/settings', { method: 'PATCH', body: { no_show_fee_cents: Math.round(Number($('#setFee').value) * 100) } });
+    await refreshMeta(); toast('Ceza tutarı güncellendi');
+  } catch (e) { toast(e.message, true); }
+});
+$('#savePassBtn').addEventListener('click', async () => {
+  try {
+    await api('/settings', { method: 'PATCH', body: { admin_password: $('#setPass').value } });
+    $('#setPass').value = '';
+    toast('Şifre değiştirildi');
+  } catch (e) { toast(e.message, true); }
+});
 
 // ---------- Modal ----------
 function openModal(html) {

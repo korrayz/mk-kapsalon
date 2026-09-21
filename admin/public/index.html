@@ -44,6 +44,9 @@
         <button class="nav-btn" data-tab="blacklist">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M5.5 5.5l13 13"/></svg>
           Kara Liste</button>
+        <button class="nav-btn" data-tab="settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.11-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.56-1.11 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h.01A1.7 1.7 0 0 0 10 4.09V4a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1.03 1.56 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.01c.26.63.87 1.04 1.56 1.04H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51.94Z"/></svg>
+          Ayarlar</button>
       </nav>
       <div class="side-stats" id="sideStats"></div>
       <button id="logoutBtn" class="btn btn-ghost small">Çıkış</button>
@@ -114,6 +117,59 @@
           <p class="muted">Kara listedeki kişiye yeni randevu açılırken uyarı verilir.</p>
         </div>
         <div id="blackList" class="table-wrap"></div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section id="tab-settings" class="tab">
+        <div class="settings-grid">
+
+          <div class="card">
+            <h3>Berberler</h3>
+            <div id="setBarbers"></div>
+            <div class="form-row add-row">
+              <input type="text" id="newBarberName" placeholder="Yeni berber adı" />
+              <button class="btn" id="addBarberBtn">Ekle</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Çalışma Saatleri</h3>
+            <div id="setHours"></div>
+            <button class="btn btn-gold" id="saveHoursBtn">Saatleri kaydet</button>
+          </div>
+
+          <div class="card wide">
+            <h3>Hizmetler &amp; Fiyatlar</h3>
+            <div id="setServices" class="table-wrap"></div>
+            <div class="form-row add-row">
+              <input type="text" id="newSvcName" placeholder="Hizmet adı" />
+              <input type="number" id="newSvcPrice" placeholder="€" min="0" step="0.5" />
+              <input type="number" id="newSvcDur" placeholder="dk" min="5" step="5" />
+              <button class="btn" id="addSvcBtn">Ekle</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Ceza</h3>
+            <label class="set-label">Gelmeme cezası (€)
+              <div class="form-row">
+                <input type="number" id="setFee" min="0" step="0.5" />
+                <button class="btn" id="saveFeeBtn">Kaydet</button>
+              </div>
+            </label>
+          </div>
+
+          <div class="card">
+            <h3>Giriş Şifresi</h3>
+            <label class="set-label">Yeni şifre (en az 6 karakter)
+              <div class="form-row">
+                <input type="password" id="setPass" autocomplete="new-password" />
+                <button class="btn" id="savePassBtn">Değiştir</button>
+              </div>
+            </label>
+          </div>
+
+        </div>
       </section>
 
     </main>
