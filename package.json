@@ -1,0 +1,10 @@
+{
+  "name": "mk-kapsalon",
+  "private": true,
+  "scripts": {
+    "admin": "node admin/server.js"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.15.0"
+  }
+}
