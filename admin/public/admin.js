@@ -192,7 +192,7 @@ $('#todayBtn').addEventListener('click', () => { $('#agendaDate').value = META.t
 function shiftDay(n) {
   const d = new Date($('#agendaDate').value + 'T00:00:00');
   d.setDate(d.getDate() + n);
-  $('#agendaDate').value = d.toISOString().slice(0, 10);
+  $('#agendaDate').value = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
   loadAgenda();
 }
 
