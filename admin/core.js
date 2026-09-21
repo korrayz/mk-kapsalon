@@ -211,7 +211,9 @@ async function handle(method, pathname, query, body, token) {
     if (query.get('to')) { sql += ' AND a.date <= ?'; args.push(query.get('to')); }
     if (query.get('barber_id')) { sql += ' AND a.barber_id = ?'; args.push(query.get('barber_id')); }
     if (query.get('status')) { sql += ' AND a.status = ?'; args.push(query.get('status')); }
-    return { status: 200, data: await q(sql + ' ORDER BY a.date, a.start_time', args) };
+    if (query.get('customer_id')) { sql += ' AND a.customer_id = ?'; args.push(query.get('customer_id')); }
+    const order = query.get('order') === 'desc' ? ' ORDER BY a.date DESC, a.start_time DESC' : ' ORDER BY a.date, a.start_time';
+    return { status: 200, data: await q(sql + order, args) };
   }
 
   if (method === 'POST' && pathname === '/appointments') {

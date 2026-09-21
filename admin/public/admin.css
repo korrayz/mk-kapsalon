@@ -341,6 +341,40 @@ tr:hover td { background: rgba(255, 255, 255, 0.02); }
 .hours-row .closed-toggle { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--muted); margin-left: auto; }
 #setHours { margin-bottom: 16px; }
 
+/* Customer history */
+.cust-link { color: var(--text); text-decoration: none; border-bottom: 1px dotted var(--gold-deep); }
+.cust-link:hover { color: var(--gold-hi); }
+.hist-stats {
+  display: flex;
+  gap: 18px;
+  padding: 12px 14px;
+  background: var(--panel-2);
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 0.88rem;
+  color: var(--text-soft);
+}
+.hist-stats b { color: var(--gold-hi); }
+.hist-head {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--muted);
+  margin: 14px 0 6px;
+}
+.hist-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 2px;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.88rem;
+}
+.hist-row:last-child { border-bottom: none; }
+.hist-row .muted { flex: 1; }
+.hist-row > span:first-child { min-width: 150px; }
+
 /* Toast */
 .toast {
   position: fixed;

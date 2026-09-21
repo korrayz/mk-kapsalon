@@ -331,7 +331,7 @@ async function loadCustomers() {
       <tr><th>İsim</th><th>Telefon</th><th>Randevu</th><th>Gelmedi</th><th>Açık ceza</th><th></th></tr>
       ${rows.map((c) => `
         <tr>
-          <td>${esc(c.name)} ${c.blacklisted ? '<span class="badge bl">Kara liste</span>' : ''}</td>
+          <td><a href="#" class="cust-link" data-hist="${c.id}">${esc(c.name)}</a> ${c.blacklisted ? '<span class="badge bl">Kara liste</span>' : ''}</td>
           <td>${esc(c.phone)}</td>
           <td>${c.appt_count}</td>
           <td>${c.no_show_count > 0 ? `<span style="color:var(--red)">${c.no_show_count}</span>` : '0'}</td>
@@ -345,6 +345,10 @@ async function loadCustomers() {
         </tr>`).join('')}
     </table>` : '<div class="empty">Müşteri yok</div>';
   bindBlacklistButtons($('#custList'), loadCustomers);
+  $('#custList').querySelectorAll('[data-hist]').forEach((a) => a.addEventListener('click', (e) => {
+    e.preventDefault();
+    openCustomerHistory(rows.find((x) => x.id == a.dataset.hist));
+  }));
   $('#custList').querySelectorAll('[data-editc]').forEach((b) => b.addEventListener('click', () => {
     const c = rows.find((x) => x.id == b.dataset.editc);
     openModal(`
@@ -378,6 +382,42 @@ function bindBlacklistButtons(root, refresh) {
       .then(() => { toast('Listeden çıkarıldı'); refresh(); loadStats(); })
       .catch((e) => toast(e.message, true));
   }));
+}
+
+// ---------- Customer history ----------
+async function openCustomerHistory(c) {
+  const [appts, pens] = await Promise.all([
+    api('/appointments?order=desc&customer_id=' + c.id),
+    api('/penalties'),
+  ]);
+  const myPens = pens.rows.filter((p) => p.customer_id === c.id);
+  const PEN_TR = { open: 'Açık', paid: 'Ödendi', waived: 'Silindi' };
+  openModal(`
+    <h3>${esc(c.name)}</h3>
+    <p class="muted" style="margin:-10px 0 14px">${esc(c.phone) || 'Telefon yok'}
+      ${c.blacklisted ? ' · <span class="badge bl">Kara liste</span>' : ''}
+      ${c.notes ? '<br/>Not: ' + esc(c.notes) : ''}</p>
+    <div class="hist-stats">
+      <span><b>${appts.length}</b> randevu</span>
+      <span><b>${c.no_show_count}</b> gelmedi</span>
+      <span>Açık ceza: <b>${c.open_penalty_cents > 0 ? eur(c.open_penalty_cents) : '—'}</b></span>
+    </div>
+    ${myPens.length ? `
+      <h4 class="hist-head">Cezalar</h4>
+      ${myPens.map((p) => `
+        <div class="hist-row">
+          <span>${p.appt_date ? fmtDate(p.appt_date) : (p.created_at || '').slice(0, 10)}</span>
+          <span><b>${eur(p.amount_cents)}</b></span>
+          <span class="badge ${p.status === 'open' ? 'no_show' : 'completed'}">${PEN_TR[p.status]}</span>
+        </div>`).join('')}` : ''}
+    <h4 class="hist-head">Randevular</h4>
+    ${appts.length ? appts.map((a) => `
+      <div class="hist-row">
+        <span>${fmtDate(a.date)} · ${a.start_time}</span>
+        <span class="muted">${esc(a.barber_name)} · ${esc(a.service_name || '—')}</span>
+        <span class="badge ${a.status}">${STATUS_TR[a.status]}</span>
+      </div>`).join('') : '<p class="muted">Randevu geçmişi yok.</p>'}
+  `);
 }
 
 // ---------- Penalties ----------
