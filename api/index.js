@@ -10,6 +10,7 @@ module.exports = async (req, res) => {
     const token = (req.headers.authorization || '').replace('Bearer ', '');
     const body = typeof req.body === 'object' ? req.body : null;
     const r = await handle(req.method, pathname, url.searchParams, body, token);
+    for (const [k, v] of Object.entries(r.headers || {})) res.setHeader(k, v);
     res.status(r.status).json(r.data);
   } catch (e) {
     console.error(e);

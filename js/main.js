@@ -67,20 +67,31 @@
   function tr(nl, en) { return curLang() === "en" ? en : nl; }
 
   /* ---------- Opening hours: open/closed badge + today highlight ---------- */
-  // NOTE: openingstijden zijn placeholder — pas aan naar de echte tijden.
+  // Tijden komen uit het beheerpaneel (/api/public/hours); dit is alleen de fallback.
   var HOURS = {
-    1: [12, 18], // Ma
-    2: [9, 18],  // Di
-    3: [9, 18],  // Wo
-    4: [9, 18],  // Do
-    5: [9, 18],  // Vr
-    6: [9, 18],  // Za
-    0: null      // Zo gesloten
+    1: ["12:00", "18:00"], // Ma
+    2: ["09:00", "18:00"], // Di
+    3: ["09:00", "18:00"], // Wo
+    4: ["09:00", "18:00"], // Do
+    5: ["09:00", "18:00"], // Vr
+    6: ["09:00", "18:00"], // Za
+    0: null                // Zo gesloten
   };
+  function toMin(t) { var p = t.split(":"); return +p[0] * 60 + +p[1]; }
+  function renderHours() {
+    document.querySelectorAll("#hoursList li").forEach(function (li) {
+      var rng = HOURS[li.getAttribute("data-day")];
+      var t = li.querySelector(".time");
+      if (!t) return;
+      t.textContent = rng ? rng[0] + " – " + rng[1] : tr("Gesloten", "Closed");
+      t.classList.toggle("closed", !rng);
+    });
+  }
   function markHours() {
+    renderHours();
     var now = new Date();
     var day = now.getDay();
-    var hour = now.getHours() + now.getMinutes() / 60;
+    var min = now.getHours() * 60 + now.getMinutes();
     document.querySelectorAll("#hoursList li").forEach(function (li) { li.classList.remove("today"); });
     var todayLi = document.querySelector('#hoursList li[data-day="' + day + '"]');
     if (todayLi) todayLi.classList.add("today");
@@ -88,7 +99,7 @@
     var badge = document.getElementById("openBadge");
     if (!badge) return;
     var rng = HOURS[day];
-    var isOpen = rng && hour >= rng[0] && hour < rng[1];
+    var isOpen = rng && min >= toMin(rng[0]) && min < toMin(rng[1]);
     if (isOpen) {
       badge.innerHTML = '<span class="dot"></span> ' + tr("Nu geopend", "Open now");
       badge.style.color = "var(--success)";
@@ -102,6 +113,16 @@
     }
   }
   markHours();
+
+  fetch("/api/public/hours")
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (d) {
+      if (!d || !d.hours || JSON.stringify(d.hours) === JSON.stringify(HOURS)) return;
+      HOURS = d.hours;
+      markHours();
+      if (document.getElementById("timeSlots")) buildSlots();
+    })
+    .catch(function () { /* API yoksa (lokaal/statisch) fallback-tijden blijven staan */ });
 
   /* ---------- Booking: date default, time slots ---------- */
   var dateInput = document.getElementById("f-datum");
@@ -139,12 +160,11 @@
       return;
     }
 
-    var start = range[0];
-    var end = range[1];
+    var start = toMin(range[0]);
+    var end = toMin(range[1]);
     var times = [];
-    for (var h = start; h < end; h++) {
-      times.push(pad(h) + ":00");
-      times.push(pad(h) + ":30");
+    for (var m = start; m + 30 <= end; m += 30) {
+      times.push(pad(Math.floor(m / 60)) + ":" + pad(m % 60));
     }
 
     // Deterministic "booked" pattern based on date, so it's stable per day.
@@ -698,7 +718,7 @@
         if (!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
         var p = node.parentElement;
         if (!p) return NodeFilter.FILTER_REJECT;
-        if (p.closest("script,style,#openBadge,#timeSlots,#bookingSuccess,#contactSuccess,[data-noi18n]"))
+        if (p.closest("script,style,#openBadge,#timeSlots,#hoursList .time,#bookingSuccess,#contactSuccess,[data-noi18n]"))
           return NodeFilter.FILTER_REJECT;
         return NodeFilter.FILTER_ACCEPT;
       }

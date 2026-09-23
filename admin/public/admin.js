@@ -57,6 +57,33 @@ function uiDialog(msg, withInput) {
 const uiConfirm = (msg) => uiDialog(msg, false);
 const uiPrompt = (msg) => uiDialog(msg, true);
 
+// Kaydet butonlarında satır içi geri bildirim: "Kaydediliyor…" → "✓ Kaydedildi"; hata butonun hemen altına yazılır.
+const CHECK_SVG = '<svg class="ico-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+async function saveWith(btn, fn, okText = 'Kaydedildi') {
+  if (btn.disabled) return false;
+  const label = btn.innerHTML;
+  const host = btn.parentElement.classList.contains('form-row') ? btn.parentElement : btn;
+  if (host.nextElementSibling?.classList.contains('field-error')) host.nextElementSibling.remove();
+  btn.disabled = true;
+  btn.style.minWidth = btn.offsetWidth + 'px';
+  btn.textContent = 'Kaydediliyor…';
+  const restore = () => { btn.classList.remove('is-ok'); btn.innerHTML = label; btn.disabled = false; btn.style.minWidth = ''; };
+  try {
+    await fn();
+  } catch (e) {
+    restore();
+    if (!e.silent) host.insertAdjacentHTML('afterend', `<p class="field-error">${esc(e.message)}</p>`);
+    return false;
+  }
+  btn.classList.add('is-ok');
+  btn.innerHTML = CHECK_SVG + okText;
+  setTimeout(() => { if (btn.isConnected) restore(); }, 1800);
+  return true;
+}
+const cancelled = () => Object.assign(new Error(''), { silent: true });
+// Modal içindeki kayıtlarda: onay işareti kısa süre görünsün, sonra kapansın
+const closeAfterSave = (then) => setTimeout(() => { closeModal(); then?.(); }, 650);
+
 function toast(msg, isErr) {
   const t = $('#toast');
   t.textContent = msg;
@@ -270,7 +297,7 @@ function openApptModal(pre) {
     }));
   });
 
-  $('#apSave').addEventListener('click', async () => {
+  $('#apSave').addEventListener('click', async (ev) => {
     const body = {
       customer_id: $('#apCustId').value || undefined,
       customer_name: $('#apCustId').value ? undefined : search.value.trim(),
@@ -281,23 +308,23 @@ function openApptModal(pre) {
       start_time: $('#apHour').value + ':' + $('#apMin').value,
       note: $('#apNote').value,
     };
-    if (!body.customer_id && !body.customer_name) return toast('Müşteri seç veya isim yaz', true);
-    try {
-      await api('/appointments', { method: 'POST', body });
-      closeModal(); toast('Randevu oluşturuldu'); afterApptChange();
-    } catch (e) {
-      if (e.data?.blacklisted) {
-        if (await uiConfirm(e.message + '\n\nYine de randevu oluşturulsun mu?')) {
-          try { await api('/appointments', { method: 'POST', body: { ...body, force: true } }); closeModal(); toast('Randevu oluşturuldu (kara liste!)'); afterApptChange(); }
-          catch (e2) { toast(e2.message, true); }
+    const ok = await saveWith(ev.currentTarget, async () => {
+      if (!body.customer_id && !body.customer_name) throw new Error('Müşteri seç veya isim yaz');
+      // Kara liste / çakışma uyarısında onay alınırsa bayrak eklenip yeniden denenir
+      let extra = {};
+      for (;;) {
+        try {
+          await api('/appointments', { method: 'POST', body: { ...body, ...extra } });
+          return;
+        } catch (e) {
+          if (!e.data?.blacklisted && !e.data?.conflict) throw e;
+          const q = e.data.blacklisted ? 'Yine de randevu oluşturulsun mu?' : 'Çakışmaya rağmen kaydedilsin mi?';
+          if (!(await uiConfirm(e.message + '\n\n' + q))) throw cancelled();
+          extra = { ...extra, force: true, ...(e.data.conflict ? { force_overlap: true } : {}) };
         }
-      } else if (e.data?.conflict) {
-        if (await uiConfirm(e.message + '\n\nÇakışmaya rağmen kaydedilsin mi?')) {
-          try { await api('/appointments', { method: 'POST', body: { ...body, force: true, force_overlap: true } }); closeModal(); afterApptChange(); }
-          catch (e2) { toast(e2.message, true); }
-        }
-      } else toast(e.message, true);
-    }
+      }
+    });
+    if (ok) closeAfterSave(afterApptChange);
   });
 }
 
@@ -477,11 +504,10 @@ $('#newCustBtn').addEventListener('click', () => {
       <label>Not<input id="ncNotes" /></label>
       <button class="btn btn-gold" id="ncSave">Kaydet</button>
     </div>`);
-  $('#ncSave').addEventListener('click', async () => {
-    try {
-      await api('/customers', { method: 'POST', body: { name: $('#ncName').value, phone: $('#ncPhone').value, notes: $('#ncNotes').value } });
-      closeModal(); toast('Müşteri eklendi'); loadCustomers();
-    } catch (e) { toast(e.message, true); }
+  $('#ncSave').addEventListener('click', async (ev) => {
+    const ok = await saveWith(ev.currentTarget, () =>
+      api('/customers', { method: 'POST', body: { name: $('#ncName').value, phone: $('#ncPhone').value, notes: $('#ncNotes').value } }));
+    if (ok) closeAfterSave(loadCustomers);
   });
 });
 
@@ -520,11 +546,12 @@ async function loadCustomers() {
         <label>Not<input id="ecNotes" value="${esc(c.notes)}" /></label>
         <button class="btn btn-gold" id="ecSave">Kaydet</button>
       </div>`);
-    $('#ecSave').addEventListener('click', async () => {
-      try {
-        await api('/customers/' + c.id, { method: 'PATCH', body: { name: $('#ecName').value, phone: $('#ecPhone').value, notes: $('#ecNotes').value } });
-        closeModal(); toast('Müşteri güncellendi'); loadCustomers();
-      } catch (e) { toast(e.message, true); }
+    $('#ecSave').addEventListener('click', async (ev) => {
+      const ok = await saveWith(ev.currentTarget, () => {
+        if (!$('#ecName').value.trim()) throw new Error('İsim boş olamaz');
+        return api('/customers/' + c.id, { method: 'PATCH', body: { name: $('#ecName').value.trim(), phone: $('#ecPhone').value, notes: $('#ecNotes').value } });
+      });
+      if (ok) closeAfterSave(loadCustomers);
     });
   }));
 }
@@ -690,15 +717,16 @@ async function loadSettings() {
         </div>
         <button class="btn btn-gold" id="esSave">Kaydet</button>
       </div>`);
-    $('#esSave').addEventListener('click', async () => {
-      try {
+    $('#esSave').addEventListener('click', async (ev) => {
+      const ok = await saveWith(ev.currentTarget, async () => {
         await api('/services/' + s.id, { method: 'PATCH', body: {
           name: $('#esName').value,
           price_cents: Math.round(Number($('#esPrice').value) * 100),
           duration_min: Number($('#esDur').value),
         } });
-        closeModal(); await refreshMeta(); loadSettings(); toast('Hizmet güncellendi');
-      } catch (e) { toast(e.message, true); }
+        await refreshMeta();
+      });
+      if (ok) closeAfterSave(loadSettings);
     });
   }));
   $('#setServices').querySelectorAll('[data-deactsvc]').forEach((b) => b.addEventListener('click', async () => {
@@ -731,47 +759,42 @@ async function loadSettings() {
   $('#setFee').value = (META.no_show_fee_cents / 100).toFixed(2);
 }
 
-$('#addBarberBtn').addEventListener('click', async () => {
+$('#addBarberBtn').addEventListener('click', (ev) => saveWith(ev.currentTarget, async () => {
   const name = $('#newBarberName').value.trim();
-  if (!name) return toast('Berber adı yaz', true);
-  try { await api('/barbers', { method: 'POST', body: { name } }); $('#newBarberName').value = ''; await refreshMeta(); loadSettings(); toast('Berber eklendi'); }
-  catch (e) { toast(e.message, true); }
-});
-$('#addSvcBtn').addEventListener('click', async () => {
-  try {
-    await api('/services', { method: 'POST', body: {
-      name: $('#newSvcName').value,
-      price_cents: Math.round(Number($('#newSvcPrice').value) * 100),
-      duration_min: Number($('#newSvcDur').value),
-    } });
-    $('#newSvcName').value = ''; $('#newSvcPrice').value = ''; $('#newSvcDur').value = '';
-    await refreshMeta(); loadSettings(); toast('Hizmet eklendi');
-  } catch (e) { toast(e.message, true); }
-});
-$('#saveHoursBtn').addEventListener('click', async () => {
+  if (!name) throw new Error('Berber adı yaz');
+  await api('/barbers', { method: 'POST', body: { name } });
+  $('#newBarberName').value = '';
+  await refreshMeta();
+  loadSettings();
+}, 'Eklendi'));
+$('#addSvcBtn').addEventListener('click', (ev) => saveWith(ev.currentTarget, async () => {
+  await api('/services', { method: 'POST', body: {
+    name: $('#newSvcName').value,
+    price_cents: Math.round(Number($('#newSvcPrice').value) * 100),
+    duration_min: Number($('#newSvcDur').value),
+  } });
+  $('#newSvcName').value = ''; $('#newSvcPrice').value = ''; $('#newSvcDur').value = '';
+  await refreshMeta();
+  loadSettings();
+}, 'Eklendi'));
+$('#saveHoursBtn').addEventListener('click', (ev) => saveWith(ev.currentTarget, async () => {
   const hours = {};
   $('#setHours').querySelectorAll('.hours-row').forEach((row) => {
-    const d = row.dataset.day;
-    hours[d] = row.querySelector('.h-closed').checked
+    hours[row.dataset.day] = row.querySelector('.h-closed').checked
       ? null
       : [row.querySelector('.h-open').value, row.querySelector('.h-close').value];
   });
-  try { await api('/settings', { method: 'PATCH', body: { hours } }); await refreshMeta(); toast('Çalışma saatleri kaydedildi'); }
-  catch (e) { toast(e.message, true); }
-});
-$('#saveFeeBtn').addEventListener('click', async () => {
-  try {
-    await api('/settings', { method: 'PATCH', body: { no_show_fee_cents: Math.round(Number($('#setFee').value) * 100) } });
-    await refreshMeta(); toast('Ceza tutarı güncellendi');
-  } catch (e) { toast(e.message, true); }
-});
-$('#savePassBtn').addEventListener('click', async () => {
-  try {
-    await api('/settings', { method: 'PATCH', body: { admin_password: $('#setPass').value } });
-    $('#setPass').value = '';
-    toast('Şifre değiştirildi');
-  } catch (e) { toast(e.message, true); }
-});
+  await api('/settings', { method: 'PATCH', body: { hours } });
+  await refreshMeta();
+}));
+$('#saveFeeBtn').addEventListener('click', (ev) => saveWith(ev.currentTarget, async () => {
+  await api('/settings', { method: 'PATCH', body: { no_show_fee_cents: Math.round(Number($('#setFee').value) * 100) } });
+  await refreshMeta();
+}));
+$('#savePassBtn').addEventListener('click', (ev) => saveWith(ev.currentTarget, async () => {
+  await api('/settings', { method: 'PATCH', body: { admin_password: $('#setPass').value } });
+  $('#setPass').value = '';
+}, 'Değiştirildi'));
 
 // ---------- Modal ----------
 function openModal(html) {

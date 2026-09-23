@@ -190,6 +190,15 @@ async function freeSlots(barberId, durMin, fromDate, days, step) {
 async function handle(method, pathname, query, body, token) {
   await ensureReady();
 
+  // Halka açık: sitedeki çalışma saatleri bölümü buradan beslenir
+  if (method === 'GET' && pathname === '/public/hours') {
+    return {
+      status: 200,
+      data: { hours: JSON.parse(await getSetting('hours')) },
+      headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' },
+    };
+  }
+
   if (method === 'POST' && pathname === '/login') {
     if ((body || {}).password !== (await adminPassword())) return { status: 401, data: { error: 'Hatalı şifre' } };
     return { status: 200, data: { token: makeToken() } };
@@ -223,22 +232,27 @@ async function handle(method, pathname, query, body, token) {
 
   if (method === 'POST' && pathname === '/appointments') {
     const b = body || {};
-    let customerId = b.customer_id;
-    if (!customerId && b.customer_name) {
-      const r = await run('INSERT INTO customers(name, phone) VALUES (?,?)', [b.customer_name.trim(), (b.customer_phone || '').trim()]);
-      customerId = r.lastId;
+    const newName = String(b.customer_name || '').trim();
+    if ((!b.customer_id && !newName) || !b.barber_id || !b.date || !b.start_time) {
+      return { status: 400, data: { error: 'Eksik alan' } };
     }
-    if (!customerId || !b.barber_id || !b.date || !b.start_time) return { status: 400, data: { error: 'Eksik alan' } };
-    const cust = await one('SELECT * FROM customers WHERE id = ?', [customerId]);
-    if (!cust) return { status: 404, data: { error: 'Müşteri bulunamadı' } };
-    if (cust.blacklisted && !b.force) {
-      return { status: 409, data: { blacklisted: true, error: `"${cust.name}" kara listede: ${cust.blacklist_reason || 'sebep girilmemiş'}` } };
+    if (b.customer_id) {
+      const cust = await one('SELECT * FROM customers WHERE id = ?', [b.customer_id]);
+      if (!cust) return { status: 404, data: { error: 'Müşteri bulunamadı' } };
+      if (cust.blacklisted && !b.force) {
+        return { status: 409, data: { blacklisted: true, error: `"${cust.name}" kara listede: ${cust.blacklist_reason || 'sebep girilmemiş'}` } };
+      }
     }
     let dur = Number(b.duration_min) || 0;
     if (!dur && b.service_id) dur = (await one('SELECT duration_min FROM services WHERE id = ?', [b.service_id]))?.duration_min || 30;
     if (!dur) dur = 30;
     if (await hasConflict(b.barber_id, b.date, toMin(b.start_time), dur) && !b.force_overlap) {
       return { status: 409, data: { conflict: true, error: 'Bu saatte berberin başka randevusu var' } };
+    }
+    // Yeni müşteri tüm kontrollerden sonra açılır; onaylı tekrar denemede çift kayıt oluşmasın
+    let customerId = b.customer_id;
+    if (!customerId) {
+      customerId = (await run('INSERT INTO customers(name, phone) VALUES (?,?)', [newName, String(b.customer_phone || '').trim()])).lastId;
     }
     const r = await run(
       'INSERT INTO appointments(customer_id, barber_id, service_id, date, start_time, duration_min, note) VALUES (?,?,?,?,?,?,?)',
@@ -405,6 +419,9 @@ async function handle(method, pathname, query, body, token) {
         const h = b.hours[d];
         if (h !== null && (!Array.isArray(h) || !/^\d{2}:\d{2}$/.test(h[0]) || !/^\d{2}:\d{2}$/.test(h[1]))) {
           return { status: 400, data: { error: 'Geçersiz saat formatı' } };
+        }
+        if (h !== null && toMin(h[0]) >= toMin(h[1])) {
+          return { status: 400, data: { error: 'Açılış saati kapanıştan önce olmalı' } };
         }
       }
       await setSetting('hours', JSON.stringify(b.hours));

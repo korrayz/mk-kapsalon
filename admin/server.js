@@ -24,7 +24,7 @@ const server = http.createServer(async (req, res) => {
       const body = ['POST', 'PATCH', 'PUT'].includes(req.method) ? await readBody(req) : null;
       const token = (req.headers.authorization || '').replace('Bearer ', '');
       const r = await handle(req.method, url.pathname.slice(4), url.searchParams, body, token);
-      res.writeHead(r.status, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.writeHead(r.status, { 'Content-Type': 'application/json; charset=utf-8', ...(r.headers || {}) });
       return res.end(JSON.stringify(r.data));
     }
     let file = url.pathname === '/' ? '/index.html' : url.pathname;
