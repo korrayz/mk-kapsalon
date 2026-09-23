@@ -6,6 +6,45 @@
 
   var prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+  /* ---------- Preloader + page transitions ---------- */
+  var pre = document.getElementById("preloader");
+  if (pre) {
+    pre.classList.add("is-ready"); // JS neemt het over van de CSS-veiligheidstimer
+    var firstVisit = true;
+    try { firstVisit = !sessionStorage.getItem("mk_seen"); sessionStorage.setItem("mk_seen", "1"); } catch (e) {}
+    var minShow = prefersReduced ? 0 : firstVisit ? 1100 : 450;
+    var shownAt = Date.now();
+    var hidden = false;
+    var hidePre = function () {
+      if (hidden) return;
+      hidden = true;
+      setTimeout(function () { pre.classList.add("is-hidden"); }, Math.max(0, minShow - (Date.now() - shownAt)));
+    };
+    if (document.readyState === "complete") hidePre();
+    else window.addEventListener("load", hidePre);
+    setTimeout(hidePre, 2200); // trage afbeeldingen mogen de site niet blokkeren
+
+    // Terug/vooruit uit de bfcache: nooit met een zichtbare overlay blijven hangen
+    window.addEventListener("pageshow", function (e) {
+      if (e.persisted) { pre.classList.remove("is-leaving"); pre.classList.add("is-hidden"); }
+    });
+
+    document.addEventListener("click", function (e) {
+      var a = e.target.closest("a[href]");
+      if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      if ((a.target && a.target !== "_self") || a.hasAttribute("download")) return;
+      var url = new URL(a.href, location.href);
+      if (url.origin !== location.origin) return;
+      if (url.pathname === location.pathname && url.hash) return;
+      if (/^\/(admin|api)\b/.test(url.pathname)) return;
+      if (/\.[a-z0-9]+$/i.test(url.pathname) && !/\.html?$/i.test(url.pathname)) return;
+      e.preventDefault();
+      pre.classList.remove("is-hidden");
+      pre.classList.add("is-leaving");
+      setTimeout(function () { location.href = url.href; }, prefersReduced ? 0 : 320);
+    });
+  }
+
   /* ---------- Footer year ---------- */
   var yearEl = document.getElementById("year");
   if (yearEl) yearEl.textContent = new Date().getFullYear();

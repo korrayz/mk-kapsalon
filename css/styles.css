@@ -1676,3 +1676,60 @@ body {
   .reveal { opacity: 1; transform: none; }
   .marquee-track { animation: none; }
 }
+
+/* ---------- Preloader / page transition ---------- */
+/* Alleen met JS zichtbaar; plSafety verbergt hem na 4s mocht main.js niet laden */
+.preloader { display: none; }
+.js .preloader {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: var(--bg);
+  transition: opacity 0.5s var(--ease), visibility 0.5s;
+  animation: plSafety 0.01s linear 4s forwards;
+}
+.js .preloader.is-ready { animation: none; }
+.js .preloader.is-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+.js .preloader.is-leaving { transition-duration: 0.3s; }
+.pl-mark {
+  display: flex;
+  gap: 0.28em;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(2.3rem, 7vw, 3.8rem);
+  line-height: 1;
+  letter-spacing: 0.01em;
+}
+.pl-mark span { opacity: 0; transform: translateY(16px); animation: plRise 0.8s var(--ease) forwards; }
+.pl-mk { color: var(--text); }
+.pl-name {
+  background: var(--gold-text-grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation-delay: 0.1s !important;
+}
+.pl-line {
+  width: 0;
+  height: 1px;
+  background: var(--gold-grad);
+  animation: plLine 1s var(--ease) 0.2s forwards;
+}
+.pl-sub {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  color: var(--muted);
+  opacity: 0;
+  animation: plFade 0.7s var(--ease) 0.35s forwards;
+}
+@keyframes plRise { to { opacity: 1; transform: none; } }
+@keyframes plLine { to { width: 140px; } }
+@keyframes plFade { to { opacity: 1; } }
+@keyframes plSafety { to { opacity: 0; visibility: hidden; pointer-events: none; } }

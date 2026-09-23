@@ -195,7 +195,7 @@ async function handle(method, pathname, query, body, token) {
     return {
       status: 200,
       data: { hours: JSON.parse(await getSetting('hours')) },
-      headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' },
+      headers: { 'Cache-Control': 'no-store' },
     };
   }
 

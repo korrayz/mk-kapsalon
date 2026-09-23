@@ -6,6 +6,12 @@
       "runtimeExecutable": "node",
       "runtimeArgs": ["admin/server.js"],
       "port": 4500
+    },
+    {
+      "name": "site",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "5500"],
+      "port": 5500
     }
   ]
 }
