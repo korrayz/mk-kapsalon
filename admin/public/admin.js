@@ -286,7 +286,7 @@ $('#rangeClear').addEventListener('click', () => showDay(META.today));
 
 // ---------- Dönem seçici ----------
 const PERIODS = {
-  past: [7, 15, 30],
+  past: [7, 15, 30, 45],
   future: [7, 15, 30, 45],
 };
 function renderPeriodPop() {
