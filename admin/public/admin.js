@@ -220,12 +220,35 @@ function openApptModal(pre) {
       </div>
       <div class="form-row">
         <label>Tarih<input type="date" id="apDate" value="${pre.date || $('#agendaDate').value}" /></label>
-        <label>Saat<input type="time" id="apTime" value="${pre.time || '10:00'}" step="300" /></label>
+        <label>Saat
+          <div class="time-pick">
+            <select id="apHour"></select><span>:</span>
+            <select id="apMin">${['00', '10', '20', '30', '40', '50'].map((m) => `<option>${m}</option>`).join('')}</select>
+          </div>
+        </label>
       </div>
+      <p class="muted small-note" id="apDayNote" hidden></p>
       <label>Not<input type="text" id="apNote" /></label>
       <button class="btn btn-gold" id="apSave">Kaydet</button>
     </div>
   `);
+
+  const [preH, preM] = (pre.time || '10:00').split(':');
+  const fillHours = (keep) => {
+    const h = META.hours[new Date($('#apDate').value + 'T00:00:00').getDay()];
+    const open = h ? Number(h[0].slice(0, 2)) : 8;
+    const close = h ? Number(h[1].slice(0, 2)) - (h[1].endsWith(':00') ? 1 : 0) : 20;
+    const from = Math.min(open, Number(keep)), to = Math.max(close, Number(keep));
+    $('#apHour').innerHTML = Array.from({ length: to - from + 1 }, (_, i) => String(from + i).padStart(2, '0'))
+      .map((x) => `<option>${x}</option>`).join('');
+    $('#apHour').value = String(keep).padStart(2, '0');
+    const note = $('#apDayNote');
+    note.hidden = !!h;
+    note.textContent = h ? '' : 'Bu gün normalde kapalı.';
+  };
+  fillHours(preH);
+  $('#apMin').value = String(Math.floor(Number(preM) / 10) * 10).padStart(2, '0');
+  $('#apDate').addEventListener('change', () => fillHours($('#apHour').value));
 
   const search = $('#apCustSearch');
   let selCust = null;
@@ -255,7 +278,7 @@ function openApptModal(pre) {
       barber_id: Number($('#apBarber').value),
       service_id: Number($('#apService').value),
       date: $('#apDate').value,
-      start_time: $('#apTime').value,
+      start_time: $('#apHour').value + ':' + $('#apMin').value,
       note: $('#apNote').value,
     };
     if (!body.customer_id && !body.customer_name) return toast('Müşteri seç veya isim yaz', true);
@@ -409,6 +432,30 @@ function renderSlots(scrollStrip) {
   $('#dayPanel').querySelectorAll('.slot-chip').forEach((c) =>
     c.addEventListener('click', () => book(day.date, c.dataset.time, SLOT.barberId)));
 }
+
+// Masaüstünde gün şeridini fareyle tutup sürükleyerek kaydırma (dokunmatikte zaten yerel kaydırma var)
+(function dragScroll(el) {
+  let down = false, moved = false, startX = 0, startLeft = 0;
+  el.addEventListener('pointerdown', (e) => {
+    if (e.pointerType !== 'mouse' || e.button !== 0) return;
+    down = true; moved = false; startX = e.clientX; startLeft = el.scrollLeft;
+  });
+  window.addEventListener('pointermove', (e) => {
+    if (!down) return;
+    const dx = e.clientX - startX;
+    if (!moved && Math.abs(dx) > 5) { moved = true; el.classList.add('dragging'); }
+    if (moved) el.scrollLeft = startLeft - dx;
+  });
+  window.addEventListener('pointerup', () => {
+    if (!down) return;
+    down = false;
+    el.classList.remove('dragging');
+  });
+  // sürükleme bitince bırakılan günün seçilmesini engelle
+  el.addEventListener('click', (e) => {
+    if (moved) { e.stopPropagation(); e.preventDefault(); moved = false; }
+  }, true);
+})($('#dayStrip'));
 
 $('#slotService').addEventListener('change', loadSlots);
 $('#slotRange').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {

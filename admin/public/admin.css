@@ -311,7 +311,11 @@ button:focus-visible {
   margin-bottom: 16px;
   scrollbar-width: thin;
   scrollbar-color: var(--line-strong) transparent;
+  cursor: grab;
+  user-select: none;
 }
+.day-strip.dragging { cursor: grabbing; }
+.day-strip.dragging .day-pill { cursor: grabbing; }
 .day-pill {
   flex: 0 0 auto;
   width: 72px;
@@ -331,7 +335,7 @@ button:focus-visible {
 .dp-num { font-family: "Fraunces", Georgia, serif; font-size: 1.4rem; line-height: 1.15; }
 .dp-count { font-size: 0.68rem; color: var(--green); }
 .day-pill.full .dp-count { color: var(--red); }
-.day-pill:disabled { opacity: 0.38; cursor: default; }
+.day-pill:disabled { opacity: 0.38; pointer-events: none; }
 .day-pill.full:disabled { opacity: 0.6; }
 .day-pill:disabled:not(.full) .dp-count { color: var(--muted); }
 .day-pill.on { border-color: var(--gold); background: var(--panel-2); }
@@ -421,6 +425,9 @@ tr:hover td { background: rgba(255, 255, 255, 0.02); }
 .form-grid label { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; color: var(--text-soft); }
 .form-row { display: flex; gap: 10px; }
 .form-row > * { flex: 1; }
+.time-pick { display: flex; align-items: center; gap: 6px; color: var(--muted); }
+.time-pick select { flex: 1; min-width: 0; }
+.small-note { font-size: 0.8rem; margin-top: -4px; }
 .cust-suggest {
   border: 1px solid var(--line-strong);
   border-radius: 8px;

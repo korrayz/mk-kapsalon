@@ -280,7 +280,7 @@ async function handle(method, pathname, query, body, token) {
     const dur = Number(query.get('duration')) || 30;
     const from = query.get('from') || todayStr();
     const days = Math.min(Number(query.get('days')) || 14, 60);
-    const step = Number(query.get('step')) || 15;
+    const step = Number(query.get('step')) || 30;
     const result = await freeSlots(barberId, dur, from, days, step);
     const firstDay = result.find((d) => d.slots.length);
     const first = firstDay ? { date: firstDay.date, time: firstDay.slots[0] } : null;
