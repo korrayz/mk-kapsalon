@@ -159,20 +159,75 @@ document.querySelectorAll('.nav-btn').forEach((btn) => {
 });
 
 // ---------- Agenda ----------
-async function loadAgenda() {
+// range: null = tek gün görünümü; aksi halde { key, label, from, to }
+const AG = { range: null, req: 0 };
+const ymd = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+const addDaysStr = (s, n) => { const d = new Date(s + 'T00:00:00'); d.setDate(d.getDate() + n); return ymd(d); };
+function shortSpan(from, to) {
+  const a = new Date(from + 'T00:00:00'), b = new Date(to + 'T00:00:00');
+  const mon = (d) => MONTHS_TR[d.getMonth()].slice(0, 3);
+  return a.getMonth() === b.getMonth()
+    ? `${a.getDate()} – ${b.getDate()} ${mon(b)}`
+    : `${a.getDate()} ${mon(a)} – ${b.getDate()} ${mon(b)}`;
+}
+
+function updateAgendaChrome() {
   const date = $('#agendaDate').value;
-  const params = new URLSearchParams({ date });
+  const diff = Math.round((new Date(date + 'T00:00:00') - new Date(META.today + 'T00:00:00')) / 86400000);
+  $('#periodVal').textContent = AG.range ? AG.range.label
+    : diff === 0 ? 'Bugün' : diff === 1 ? 'Yarın' : diff === -1 ? 'Dün' : 'Tek gün';
+  $('#dayNav').hidden = !!AG.range;
+  $('#rangeChip').hidden = !AG.range;
+  if (AG.range) $('#rangeText').textContent = shortSpan(AG.range.from, AG.range.to);
+}
+
+async function loadAgenda() {
+  const req = ++AG.req;
+  updateAgendaChrome();
+  const params = new URLSearchParams();
+  if (AG.range) { params.set('from', AG.range.from); params.set('to', AG.range.to); }
+  else params.set('date', $('#agendaDate').value);
   if ($('#agendaBarber').value) params.set('barber_id', $('#agendaBarber').value);
   if ($('#agendaStatus').value) params.set('status', $('#agendaStatus').value);
   const rows = await api('/appointments?' + params);
+  if (req !== AG.req) return;
   const list = $('#agendaList');
-  if (!rows.length) {
-    list.innerHTML = `<div class="empty">${fmtDate(date)} — randevu yok</div>`;
-    return;
+
+  if (AG.range) {
+    list.innerHTML = renderRangeSummary(rows) + (rows.length ? renderDayGroups(rows) : '<div class="empty">Bu dönemde randevu yok</div>');
+  } else {
+    list.innerHTML = rows.length ? rows.map(apptCard).join('') : `<div class="empty">${fmtDate($('#agendaDate').value)} — randevu yok</div>`;
   }
-  list.innerHTML = rows.map((a) => {
-    const endMin = toMin(a.start_time) + a.duration_min;
-    return `
+  bindApptActions(list);
+}
+
+function renderRangeSummary(rows) {
+  const count = (s) => rows.filter((a) => a.status === s).length;
+  const sum = (s) => rows.filter((a) => a.status === s).reduce((t, a) => t + (a.price_cents || 0), 0);
+  const parts = [`<span><b>${rows.length}</b> randevu</span>`];
+  if (count('scheduled')) parts.push(`<span><b>${count('scheduled')}</b> bekleyen</span>`);
+  if (count('completed')) parts.push(`<span><b>${count('completed')}</b> tamamlandı</span>`);
+  if (count('no_show')) parts.push(`<span class="red"><b>${count('no_show')}</b> gelmedi</span>`);
+  if (count('cancelled')) parts.push(`<span><b>${count('cancelled')}</b> iptal</span>`);
+  if (sum('completed')) parts.push(`<span class="gold">Ciro <b>${eur(sum('completed'))}</b></span>`);
+  if (sum('scheduled')) parts.push(`<span class="gold">Beklenen <b>${eur(sum('scheduled'))}</b></span>`);
+  return `<div class="range-sum">${parts.join('')}</div>`;
+}
+
+function renderDayGroups(rows) {
+  const byDay = {};
+  for (const a of rows) (byDay[a.date] ||= []).push(a);
+  return Object.keys(byDay).sort().map((date) => `
+    <div class="day-group">
+      <h4 class="day-head">${date === META.today ? '<span class="today-tag">Bugün</span> · ' : ''}${longDate(date)}
+        <span class="day-count">· ${byDay[date].length} randevu</span></h4>
+      <div class="appt-list">${byDay[date].map(apptCard).join('')}</div>
+    </div>`).join('');
+}
+
+function apptCard(a) {
+  const endMin = toMin(a.start_time) + a.duration_min;
+  return `
     <div class="appt-card ${a.status}">
       <div class="appt-time">${a.start_time}<small>– ${toHHMM(endMin)}</small></div>
       <div class="appt-info">
@@ -189,8 +244,9 @@ async function loadAgenda() {
         <button class="btn small btn-ghost danger" data-act="delete" data-id="${a.id}">Sil</button>
       </div>
     </div>`;
-  }).join('');
+}
 
+function bindApptActions(list) {
   list.querySelectorAll('[data-act]').forEach((btn) => {
     btn.addEventListener('click', async () => {
       const id = btn.dataset.id, act = btn.dataset.act;
@@ -211,18 +267,81 @@ async function loadAgenda() {
 function toMin(t) { const [h, m] = t.split(':').map(Number); return h * 60 + m; }
 function toHHMM(min) { return String(Math.floor(min / 60)).padStart(2, '0') + ':' + String(min % 60).padStart(2, '0'); }
 
-$('#agendaDate').addEventListener('change', loadAgenda);
+$('#agendaDate').addEventListener('change', () => { AG.range = null; loadAgenda(); });
 $('#agendaBarber').addEventListener('change', loadAgenda);
 $('#agendaStatus').addEventListener('change', loadAgenda);
 $('#prevDay').addEventListener('click', () => shiftDay(-1));
 $('#nextDay').addEventListener('click', () => shiftDay(1));
-$('#todayBtn').addEventListener('click', () => { $('#agendaDate').value = META.today; loadAgenda(); });
 function shiftDay(n) {
-  const d = new Date($('#agendaDate').value + 'T00:00:00');
-  d.setDate(d.getDate() + n);
-  $('#agendaDate').value = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  AG.range = null;
+  $('#agendaDate').value = addDaysStr($('#agendaDate').value, n);
   loadAgenda();
 }
+function showDay(date) {
+  AG.range = null;
+  $('#agendaDate').value = date;
+  loadAgenda();
+}
+$('#rangeClear').addEventListener('click', () => showDay(META.today));
+
+// ---------- Dönem seçici ----------
+const PERIODS = {
+  past: [7, 15, 30],
+  future: [7, 15, 30, 45],
+};
+function renderPeriodPop() {
+  const t = META.today;
+  const activeKey = AG.range ? AG.range.key : ($('#agendaDate').value === t ? 'today' : null);
+  const item = (dir, n, i) => {
+    const key = dir + n;
+    const from = dir === 'p' ? addDaysStr(t, -(n - 1)) : t;
+    const to = dir === 'p' ? t : addDaysStr(t, n - 1);
+    const label = (dir === 'p' ? 'Son ' : 'Önümüzdeki ') + n + ' gün';
+    return `
+      <button type="button" class="pp-item ${activeKey === key ? 'on' : ''}" style="--i:${i}"
+        data-key="${key}" data-from="${from}" data-to="${to}" data-label="${label}">
+        <span class="pp-name">${n} gün</span>
+        <span class="pp-span">${shortSpan(from, to)}</span>
+      </button>`;
+  };
+  $('#periodPop').innerHTML = `
+    <div class="pp-title">Dönem seç</div>
+    <button type="button" class="pp-today ${activeKey === 'today' ? 'on' : ''}" data-key="today">
+      <span class="pp-name">Bugün</span>
+      <span class="pp-span">${longDate(t)}</span>
+    </button>
+    <div class="pp-cols">
+      <div class="pp-col past">
+        <div class="pp-head">← Geçmiş</div>
+        ${PERIODS.past.map((n, i) => item('p', n, i)).join('')}
+      </div>
+      <div class="pp-col future">
+        <div class="pp-head">Gelecek →</div>
+        ${PERIODS.future.map((n, i) => item('f', n, i)).join('')}
+      </div>
+    </div>`;
+  $('#periodPop').querySelectorAll('[data-key]').forEach((b) => b.addEventListener('click', () => {
+    closePeriod();
+    if (b.dataset.key === 'today') return showDay(META.today);
+    AG.range = { key: b.dataset.key, label: b.dataset.label, from: b.dataset.from, to: b.dataset.to };
+    loadAgenda();
+  }));
+}
+function openPeriod() {
+  renderPeriodPop();
+  const pop = $('#periodPop');
+  pop.hidden = false;
+  pop.classList.remove('align-right');
+  if (pop.getBoundingClientRect().right > window.innerWidth - 12) pop.classList.add('align-right');
+  $('#periodBtn').setAttribute('aria-expanded', 'true');
+}
+function closePeriod() {
+  $('#periodPop').hidden = true;
+  $('#periodBtn').setAttribute('aria-expanded', 'false');
+}
+$('#periodBtn').addEventListener('click', () => ($('#periodPop').hidden ? openPeriod() : closePeriod()));
+document.addEventListener('click', (e) => { if (!$('#periodPop').hidden && !e.target.closest('#period')) closePeriod(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#periodPop').hidden) closePeriod(); });
 
 // ---------- New appointment modal ----------
 $('#newApptBtn').addEventListener('click', () => openApptModal({}));

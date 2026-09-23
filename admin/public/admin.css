@@ -236,6 +236,137 @@ button:focus-visible {
   border-radius: var(--radius);
 }
 
+/* Dönem seçici */
+.period { position: relative; }
+.period-btn { display: inline-flex; align-items: center; gap: 8px; }
+.period-btn svg { width: 16px; height: 16px; opacity: 0.7; flex-shrink: 0; }
+.period-label { color: var(--text-soft); }
+.period-val { color: var(--gold-hi); font-weight: 600; }
+.period-btn .chev { width: 14px; height: 14px; transition: transform 0.15s; }
+.period-btn[aria-expanded="true"] { border-color: var(--gold-deep); }
+.period-btn[aria-expanded="true"] .chev { transform: rotate(180deg); }
+.period-pop {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 40;
+  width: 340px;
+  max-width: calc(100vw - 32px);
+  background: var(--panel);
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+  padding: 16px 16px 18px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
+}
+.period-pop.align-right { left: auto; right: 0; }
+.pp-title, .pp-head {
+  font-size: 0.64rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.6px;
+  color: var(--muted);
+}
+.pp-title { text-align: center; margin-bottom: 12px; }
+.pp-head { margin-bottom: 2px; }
+.pp-today, .pp-item {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  color: var(--text);
+  transition: border-color 0.15s;
+}
+.pp-today {
+  align-items: center;
+  width: 180px;
+  margin: 0 auto;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border-color: var(--line-strong);
+}
+.pp-today .pp-name { font-family: "Fraunces", Georgia, serif; font-size: 1.15rem; font-weight: 500; }
+.pp-cols {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 26px;
+  margin-top: 14px;
+}
+.pp-cols::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -14px;
+  bottom: 6px;
+  width: 1px;
+  background: linear-gradient(var(--line-strong), transparent);
+}
+.pp-col { display: flex; flex-direction: column; gap: 8px; }
+.pp-col.past { align-items: flex-end; }
+.pp-col.future { align-items: flex-start; }
+.pp-item { width: 108px; padding: 7px 11px; border-radius: 9px; }
+/* bugünden uzaklaştıkça kutular dışa kayar */
+.pp-col.past .pp-item { align-items: flex-end; text-align: right; margin-right: calc(var(--i) * 10px); }
+.pp-col.future .pp-item { align-items: flex-start; text-align: left; margin-left: calc(var(--i) * 10px); }
+.pp-today:hover, .pp-item:hover { border-color: var(--gold-deep); }
+.pp-today.on, .pp-item.on { border-color: var(--gold); box-shadow: inset 0 0 0 1px var(--gold); }
+.pp-today.on .pp-name, .pp-item.on .pp-name { color: var(--gold-hi); }
+.pp-name { font-weight: 600; font-size: 0.9rem; }
+.pp-span { font-size: 0.7rem; color: var(--muted); margin-top: 1px; white-space: nowrap; }
+
+.range-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 6px 6px 14px;
+  border: 1px solid var(--gold-deep);
+  border-radius: 8px;
+  background: var(--panel-2);
+  color: var(--text);
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+.range-x {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+.range-x:hover { color: var(--text); background: rgba(255, 255, 255, 0.06); }
+
+.range-sum {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 24px;
+  padding: 14px 18px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  margin-bottom: 22px;
+  font-size: 0.88rem;
+  color: var(--text-soft);
+}
+.range-sum b { color: var(--text); font-family: "Fraunces", Georgia, serif; font-size: 1.2rem; font-weight: 500; margin: 0 3px; }
+.range-sum .gold b { color: var(--gold-hi); }
+.range-sum .red b { color: var(--red); }
+.day-group { margin-bottom: 24px; }
+.day-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.4px;
+  color: var(--text-soft);
+  margin-bottom: 10px;
+}
+.day-head::after { content: ""; flex: 1; height: 1px; background: var(--line); margin-left: 8px; }
+.day-head .day-count { color: var(--muted); }
+.day-head .today-tag { color: var(--gold-hi); }
+
 /* Slots */
 .slots-head {
   display: flex;
