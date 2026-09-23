@@ -102,11 +102,12 @@ $('#logoutBtn').addEventListener('click', () => {
 
 function fillSelects() {
   const bOpts = META.barbers.map((b) => `<option value="${b.id}">${esc(b.name)}</option>`).join('');
+  const prevSvc = $('#slotService').value;
   $('#agendaBarber').innerHTML = '<option value="">Tüm berberler</option>' + bOpts;
-  $('#slotBarber').innerHTML = bOpts;
   $('#slotService').innerHTML = META.services
     .map((s) => `<option value="${s.id}" data-dur="${s.duration_min}">${esc(s.name)} — ${s.duration_min} dk</option>`)
     .join('');
+  if (prevSvc && META.services.some((s) => s.id == prevSvc)) $('#slotService').value = prevSvc;
 }
 
 async function loadStats() {
@@ -126,7 +127,7 @@ document.querySelectorAll('.nav-btn').forEach((btn) => {
     document.querySelectorAll('.tab').forEach((t) => t.classList.remove('active'));
     btn.classList.add('active');
     $('#tab-' + btn.dataset.tab).classList.add('active');
-    ({ agenda: loadAgenda, customers: loadCustomers, penalties: loadPenalties, blacklist: loadBlacklist, settings: loadSettings }[btn.dataset.tab] || (() => {}))();
+    ({ agenda: loadAgenda, slots: loadSlots, customers: loadCustomers, penalties: loadPenalties, blacklist: loadBlacklist, settings: loadSettings }[btn.dataset.tab] || (() => {}))();
   });
 });
 
@@ -260,16 +261,16 @@ function openApptModal(pre) {
     if (!body.customer_id && !body.customer_name) return toast('Müşteri seç veya isim yaz', true);
     try {
       await api('/appointments', { method: 'POST', body });
-      closeModal(); toast('Randevu oluşturuldu'); loadAgenda(); loadStats();
+      closeModal(); toast('Randevu oluşturuldu'); afterApptChange();
     } catch (e) {
       if (e.data?.blacklisted) {
         if (await uiConfirm(e.message + '\n\nYine de randevu oluşturulsun mu?')) {
-          try { await api('/appointments', { method: 'POST', body: { ...body, force: true } }); closeModal(); toast('Randevu oluşturuldu (kara liste!)'); loadAgenda(); }
+          try { await api('/appointments', { method: 'POST', body: { ...body, force: true } }); closeModal(); toast('Randevu oluşturuldu (kara liste!)'); afterApptChange(); }
           catch (e2) { toast(e2.message, true); }
         }
       } else if (e.data?.conflict) {
         if (await uiConfirm(e.message + '\n\nÇakışmaya rağmen kaydedilsin mi?')) {
-          try { await api('/appointments', { method: 'POST', body: { ...body, force: true, force_overlap: true } }); closeModal(); loadAgenda(); }
+          try { await api('/appointments', { method: 'POST', body: { ...body, force: true, force_overlap: true } }); closeModal(); afterApptChange(); }
           catch (e2) { toast(e2.message, true); }
         }
       } else toast(e.message, true);
@@ -278,31 +279,144 @@ function openApptModal(pre) {
 }
 
 // ---------- Slots ----------
-$('#findSlots').addEventListener('click', loadSlots);
+const DOW_SHORT = ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'];
+const MONTHS_TR = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+const SLOT = { days: 14, byBarber: {}, barberId: null, date: null, req: 0 };
+
+function relDay(date) {
+  const d = new Date(date + 'T00:00:00');
+  const diff = Math.round((d - new Date(META.today + 'T00:00:00')) / 86400000);
+  if (diff === 0) return 'Bugün';
+  if (diff === 1) return 'Yarın';
+  return DOW_SHORT[d.getDay()] + ' ' + d.getDate() + ' ' + MONTHS_TR[d.getMonth()].slice(0, 3);
+}
+function longDate(date) {
+  const d = new Date(date + 'T00:00:00');
+  return DAYS_TR[d.getDay()] + ', ' + d.getDate() + ' ' + MONTHS_TR[d.getMonth()];
+}
+function afterApptChange() {
+  loadAgenda(); loadStats();
+  if ($('#tab-slots').classList.contains('active')) loadSlots();
+}
+
 async function loadSlots() {
-  const barberId = $('#slotBarber').value;
+  const req = ++SLOT.req;
   const svc = $('#slotService').selectedOptions[0];
   const dur = svc ? Number(svc.dataset.dur) : 30;
-  const days = Number($('#slotDays').value) || 14;
-  const r = await api(`/slots?barber_id=${barberId}&duration=${dur}&days=${days}`);
-  const box = $('#earliestBox');
-  if (r.earliest) {
-    box.hidden = false;
-    box.innerHTML = `<span class="earliest-label">En yakın boş saat</span> <b>${fmtDate(r.earliest.date)} · ${r.earliest.time}</b> <button class="btn small btn-gold" id="bookEarliest">Randevu aç</button>`;
-    $('#bookEarliest').addEventListener('click', () =>
-      openApptModal({ date: r.earliest.date, time: r.earliest.time, barber_id: barberId, service_id: svc?.value }));
-  } else {
-    box.hidden = false;
-    box.innerHTML = 'Bu aralıkta boş saat yok.';
+  $('#barberCards').innerHTML = META.barbers.map(() => '<div class="skeleton"></div>').join('');
+  $('#dayStrip').innerHTML = '';
+  $('#dayPanel').innerHTML = '';
+  let results;
+  try {
+    results = await Promise.all(META.barbers.map((b) => api(`/slots?barber_id=${b.id}&duration=${dur}&days=${SLOT.days}`)));
+  } catch (e) {
+    if (req === SLOT.req) toast(e.message, true);
+    return;
   }
-  $('#slotResults').innerHTML = r.days.map((d) => `
-    <div class="slot-day">
-      <h4>${fmtDate(d.date)} <span class="muted">(${d.slots.length} boş)</span></h4>
-      <div class="slot-chips">${d.slots.map((s) => `<button class="slot-chip" data-date="${d.date}" data-time="${s}">${s}</button>`).join('')}</div>
-    </div>`).join('') || '<div class="empty">Boş saat bulunamadı</div>';
-  $('#slotResults').querySelectorAll('.slot-chip').forEach((c) =>
-    c.addEventListener('click', () => openApptModal({ date: c.dataset.date, time: c.dataset.time, barber_id: barberId, service_id: svc?.value })));
+  if (req !== SLOT.req) return; // bu arada filtre değişti, eski cevabı at
+  SLOT.byBarber = {};
+  META.barbers.forEach((b, i) => { SLOT.byBarber[b.id] = results[i]; });
+  if (!SLOT.byBarber[SLOT.barberId]) {
+    const key = (b) => { const e = SLOT.byBarber[b.id].earliest; return e ? e.date + e.time : '~'; };
+    SLOT.barberId = [...META.barbers].sort((a, b) => key(a).localeCompare(key(b)))[0].id;
+  }
+  SLOT.date = SLOT.byBarber[SLOT.barberId].earliest?.date || null;
+  renderSlots(true);
 }
+
+function renderSlots(scrollStrip) {
+  const svcId = $('#slotService').value;
+  const barber = META.barbers.find((b) => b.id === SLOT.barberId);
+  const data = SLOT.byBarber[SLOT.barberId];
+  const book = (date, time, barberId) => openApptModal({ date, time, barber_id: barberId, service_id: svcId });
+
+  $('#barberCards').innerHTML = META.barbers.map((b) => {
+    const e = SLOT.byBarber[b.id]?.earliest;
+    return `
+    <div class="barber-card ${b.id === SLOT.barberId ? 'on' : ''}" data-barber="${b.id}" tabindex="0" role="button">
+      <div class="bc-name">${esc(b.name)}</div>
+      <div class="bc-label">En yakın boş saat</div>
+      <div class="bc-row">
+        ${e
+          ? `<span class="bc-when">${relDay(e.date)} · ${e.time}</span>
+             <button type="button" class="btn small btn-gold" data-book="${b.id}">Randevu aç</button>`
+          : '<span class="bc-none">Bu aralıkta boş saat yok</span>'}
+      </div>
+    </div>`;
+  }).join('');
+  $('#barberCards').querySelectorAll('.barber-card').forEach((card) => {
+    const select = () => {
+      SLOT.barberId = Number(card.dataset.barber);
+      SLOT.date = SLOT.byBarber[SLOT.barberId].earliest?.date || null;
+      renderSlots(true);
+    };
+    card.addEventListener('click', select);
+    card.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' && ev.target === card) select(); });
+  });
+  $('#barberCards').querySelectorAll('[data-book]').forEach((btn) => btn.addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    const e = SLOT.byBarber[btn.dataset.book].earliest;
+    book(e.date, e.time, Number(btn.dataset.book));
+  }));
+
+  if (!data) return;
+  $('#dayStrip').innerHTML = data.days.map((d) => {
+    const n = d.slots.length;
+    const full = !d.closed && !d.past && !n;
+    const label = d.closed ? 'Kapalı' : d.past ? 'Kapandı' : full ? 'Dolu' : n + ' boş';
+    return `
+    <button type="button" class="day-pill ${d.date === SLOT.date ? 'on' : ''} ${full ? 'full' : ''}" data-date="${d.date}" ${n ? '' : 'disabled'}>
+      <span class="dp-dow">${d.date === META.today ? 'Bugün' : DOW_SHORT[d.dow]}</span>
+      <span class="dp-num">${new Date(d.date + 'T00:00:00').getDate()}</span>
+      <span class="dp-count">${label}</span>
+    </button>`;
+  }).join('');
+  $('#dayStrip').querySelectorAll('.day-pill:not(:disabled)').forEach((p) => p.addEventListener('click', () => {
+    SLOT.date = p.dataset.date;
+    renderSlots(false);
+  }));
+  if (scrollStrip) {
+    const strip = $('#dayStrip'), on = strip.querySelector('.day-pill.on');
+    const x = on ? on.offsetLeft - strip.offsetLeft : 0;
+    strip.scrollLeft = x + (on ? on.offsetWidth : 0) > strip.clientWidth ? x - 8 : 0;
+  }
+
+  const day = data.days.find((d) => d.date === SLOT.date);
+  if (!day) {
+    $('#dayPanel').innerHTML = `<div class="empty">${esc(barber.name)} için bu aralıkta boş saat yok. Aralığı genişletmeyi dene.</div>`;
+    return;
+  }
+  const groups = [
+    ['Sabah', (t) => t < '12:00'],
+    ['Öğleden sonra', (t) => t >= '12:00' && t < '17:00'],
+    ['Akşam', (t) => t >= '17:00'],
+  ];
+  $('#dayPanel').innerHTML = `
+    <div class="day-panel">
+      <div class="dpn-head">
+        <h3>${longDate(day.date)}</h3>
+        <span class="muted">${esc(barber.name)} · ${day.slots.length} boş saat</span>
+      </div>
+      ${groups.map(([title, inGroup]) => {
+        const times = day.slots.filter(inGroup);
+        return times.length ? `
+        <div class="slot-group">
+          <h4>${title}</h4>
+          <div class="slot-grid">${times.map((t) => `<button type="button" class="slot-chip" data-time="${t}">${t}</button>`).join('')}</div>
+        </div>` : '';
+      }).join('')}
+    </div>`;
+  $('#dayPanel').querySelectorAll('.slot-chip').forEach((c) =>
+    c.addEventListener('click', () => book(day.date, c.dataset.time, SLOT.barberId)));
+}
+
+$('#slotService').addEventListener('change', loadSlots);
+$('#slotRange').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
+  $('#slotRange .on').classList.remove('on');
+  b.classList.add('on');
+  SLOT.days = Number(b.dataset.days);
+  loadSlots();
+}));
 
 // ---------- Customers ----------
 let custTimer;

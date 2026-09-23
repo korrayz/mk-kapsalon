@@ -155,8 +155,16 @@ async function hasConflict(barberId, date, startMin, durMin, exceptId) {
   });
 }
 
+// Aralıktaki her günü döndürür (kapalı / geçmiş / dolu günler dahil) — tek sorgu.
 async function freeSlots(barberId, durMin, fromDate, days, step) {
   const hours = JSON.parse(await getSetting('hours'));
+  const rows = await q(
+    `SELECT date, start_time, duration_min FROM appointments
+     WHERE barber_id = ? AND date >= ? AND date <= ? AND status IN ('scheduled','completed')`,
+    [barberId, fromDate, addDays(fromDate, days - 1)]);
+  const byDate = {};
+  for (const r of rows) (byDate[r.date] ||= []).push([toMin(r.start_time), toMin(r.start_time) + r.duration_min]);
+
   const out = [];
   const nowDate = todayStr();
   const nowMin = nowMinutesNL();
@@ -164,18 +172,15 @@ async function freeSlots(barberId, durMin, fromDate, days, step) {
     const date = addDays(fromDate, i);
     const dow = new Date(date + 'T00:00:00').getDay();
     const h = hours[dow];
-    if (!h) continue;
+    if (!h) { out.push({ date, dow, closed: true, past: false, slots: [] }); continue; }
     const open = toMin(h[0]), close = toMin(h[1]);
-    const appts = (await q(
-      `SELECT start_time, duration_min FROM appointments
-       WHERE barber_id = ? AND date = ? AND status IN ('scheduled','completed')`,
-      [barberId, date])).map((r) => [toMin(r.start_time), toMin(r.start_time) + r.duration_min]);
+    const appts = byDate[date] || [];
     const slots = [];
     for (let t = open; t + durMin <= close; t += step) {
       if (date === nowDate && t < nowMin) continue;
       if (!appts.some(([s, e]) => t < e && s < t + durMin)) slots.push(toHHMM(t));
     }
-    if (slots.length) out.push({ date, dow, slots });
+    out.push({ date, dow, closed: false, past: date === nowDate && nowMin >= close, slots });
   }
   return out;
 }
@@ -277,7 +282,8 @@ async function handle(method, pathname, query, body, token) {
     const days = Math.min(Number(query.get('days')) || 14, 60);
     const step = Number(query.get('step')) || 15;
     const result = await freeSlots(barberId, dur, from, days, step);
-    const first = result.length ? { date: result[0].date, time: result[0].slots[0] } : null;
+    const firstDay = result.find((d) => d.slots.length);
+    const first = firstDay ? { date: firstDay.date, time: firstDay.slots[0] } : null;
     return { status: 200, data: { earliest: first, days: result } };
   }
 

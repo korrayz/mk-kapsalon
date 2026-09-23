@@ -78,14 +78,25 @@
 
       <!-- SLOTS -->
       <section id="tab-slots" class="tab">
-        <div class="toolbar">
-          <select id="slotBarber"></select>
-          <select id="slotService"></select>
-          <label class="inline">Gün: <input type="number" id="slotDays" value="14" min="1" max="60" /></label>
-          <button class="btn btn-gold" id="findSlots">Boş saat bul</button>
+        <div class="slots-head">
+          <div>
+            <h2 class="page-title">Boş Saatler</h2>
+            <p class="muted">Seçilen hizmetin süresine göre müsait saatler</p>
+          </div>
+          <div class="slots-filters">
+            <label class="field">Hizmet<select id="slotService"></select></label>
+            <div class="field">Aralık
+              <div class="seg" id="slotRange">
+                <button type="button" data-days="7">7 gün</button>
+                <button type="button" data-days="14" class="on">14 gün</button>
+                <button type="button" data-days="30">30 gün</button>
+              </div>
+            </div>
+          </div>
         </div>
-        <div id="earliestBox" class="earliest" hidden></div>
-        <div id="slotResults" class="slot-results"></div>
+        <div id="barberCards" class="barber-cards"></div>
+        <div id="dayStrip" class="day-strip"></div>
+        <div id="dayPanel"></div>
       </section>
 
       <!-- CUSTOMERS -->
