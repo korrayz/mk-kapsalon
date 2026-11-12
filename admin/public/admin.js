@@ -106,9 +106,37 @@ async function boot() {
   $('#app').hidden = false;
   fillSelects();
   $('#agendaDate').value = META.today;
+  setDemoUI(META.demo_mode);
   loadAgenda();
   loadStats();
 }
+
+function setDemoUI(on) {
+  $('#demoToggle').checked = on;
+  $('#demoState').textContent = on ? 'Açık — örnek kayıtlar' : 'Kapalı';
+}
+$('#demoToggle').addEventListener('change', async (e) => {
+  const on = e.target.checked;
+  if (!on && !(await uiConfirm('Demo verisi kapatılsın mı?\nÖrnek randevu, müşteri ve cezalar silinir. Gerçek kayıtlarınıza dokunulmaz.'))) {
+    e.target.checked = true;
+    return;
+  }
+  e.target.disabled = true;
+  $('#demoState').textContent = on ? 'Yükleniyor…' : 'Siliniyor…';
+  try {
+    await api('/demo', { method: 'POST', body: { on } });
+    await refreshMeta();
+    setDemoUI(on);
+    loadStats();
+    document.querySelector('.nav-btn.active')?.click();
+    toast(on ? 'Demo verisi yüklendi' : 'Demo verisi kaldırıldı');
+  } catch (err) {
+    setDemoUI(!on);
+    toast(err.message, true);
+  } finally {
+    e.target.disabled = false;
+  }
+});
 $('#loginForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   $('#loginErr').textContent = '';

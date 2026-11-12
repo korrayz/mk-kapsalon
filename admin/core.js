@@ -96,6 +96,193 @@ async function initDb() {
     ];
     for (const s of seed) await run('INSERT INTO services(name, price_cents, duration_min) VALUES (?,?,?)', s);
   }
+  for (const t of ['customers', 'appointments', 'penalties']) {
+    const cols = await q(`PRAGMA table_info(${t})`);
+    if (!cols.some((c) => c.name === 'is_demo')) await db().execute(`ALTER TABLE ${t} ADD COLUMN is_demo INTEGER NOT NULL DEFAULT 0`);
+  }
+  // İlk açılışta demo modu açık gelir
+  if ((await getSetting('demo_mode')) == null) {
+    // Eski seed-demo.js'in işaretsiz kayıtlarını temizle (çift veri olmasın)
+    const old = await q(`SELECT id FROM customers WHERE is_demo = 0 AND name IN (${OLD_SEED_NAMES.map(() => '?').join(',')})`, OLD_SEED_NAMES);
+    if (old.length) {
+      const ids = old.map((r) => r.id).join(',');
+      await db().execute(`DELETE FROM penalties WHERE customer_id IN (${ids})`);
+      await db().execute(`DELETE FROM appointments WHERE customer_id IN (${ids})`);
+      await db().execute(`DELETE FROM customers WHERE id IN (${ids})`);
+    }
+    await seedDemo();
+    await setSetting('demo_mode', '1');
+  }
+}
+
+// ---------- Demo verisi ----------
+const OLD_SEED_NAMES = ['Daan de Vries', 'Sem Bakker', 'Lucas Visser', 'Thomas Jansen', 'Ruben Smit', 'Emre Demir',
+  'Mert Aydın', 'Burak Şahin', 'Finn van Dijk', 'Levi Mulder', 'Julian Bos', 'Kaan Yıldız'];
+const DEMO_CUSTOMERS = [
+  ['Daan de Vries', '06 21436587', 'Daimi müşteri, hep skin fade'], ['Sem Bakker', '06 38547291', ''],
+  ['Lucas Visser', '06 45678123', ''], ['Thomas Jansen', '06 52381746', 'Hassas cilt — alkollü ürün yok'],
+  ['Ruben Smit', '06 61728394', ''], ['Emre Demir', '06 73641852', 'Oğluyla geliyor (8 yaş)'],
+  ['Mert Aydın', '06 84512637', ''], ['Burak Şahin', '06 91827364', ''], ['Finn van Dijk', '06 24681357', ''],
+  ['Levi Mulder', '06 35792468', ''], ['Julian Bos', '06 46913578', ''], ['Kaan Yıldız', '06 57824689', 'Sakal hep kısa'],
+  ['Noah de Boer', '06 13572468', ''], ['Milan Peters', '06 86420975', ''], ['Yusuf Çelik', '06 29384756', ''],
+  ['Jesse Koster', '06 47362819', ''], ['Bram Hendriks', '06 58273641', 'Öğrenci indirimi'],
+  ['Ahmet Kaya', '06 69182736', ''], ['Stijn van Leeuwen', '06 71829364', ''], ['Omar El Amrani', '06 82736451', ''],
+  ['Tim Dekker', '06 93847562', '65+ indirimi'], ['Hamza Öztürk', '06 14725836', ''], ['Gijs Vermeulen', '06 25836947', ''],
+  ['Sven Brouwer', '06 36947158', ''],
+  ['Lars de Graaf', '06 53464097', ''],
+  ['Ivo Schouten', '06 30246633', ''],
+  ['Mehmet Arslan', '06 62992312', ''],
+  ['Sander Kuipers', '06 97366946', ''],
+  ['Jayden Willems', '06 16480894', ''],
+  ['Rayan Bouzid', '06 19722233', ''],
+  ['Max Hoekstra', '06 81924865', ''],
+  ['Ali Koç', '06 22633920', ''],
+  ['Wouter Prins', '06 59081935', ''],
+  ['Thijs Postma', '06 88220482', ''],
+  ['Cem Doğan', '06 17784483', ''],
+  ['Luuk Verhoeven', '06 78106871', ''],
+  ['Bilal Haddou', '06 38816302', ''],
+  ['Rick van den Berg', '06 15032582', ''],
+  ['Mustafa Aksoy', '06 21535642', ''],
+  ['Joep Maas', '06 68202938', ''],
+  ['Koen Smits', '06 66126116', ''],
+  ['Selim Erdem', '06 19375836', ''],
+  ['Bas Jacobs', '06 42301241', ''],
+  ['Daniël Kok', '06 22175294', ''],
+  ['Furkan Güneş', '06 83960310', ''],
+  ['Niels de Wit', '06 66978001', ''],
+  ['Ilias Benali', '06 17933677', ''],
+  ['Pim Vos', '06 85893910', ''],
+  ['Oğuz Tekin', '06 26616417', ''],
+  ['Mats Groen', '06 39962626', ''],
+  ['Hugo Martens', '06 94641177', ''],
+  ['Kerem Polat', '06 94212661', ''],
+  ['Teun Bosman', '06 88248519', ''],
+  ['Anas Mansouri', '06 18302983', ''],
+  ['Floris Dijkstra', '06 87457446', ''],
+  ['Serkan Yalçın', '06 88590039', ''],
+  ['Jens Timmermans', '06 63241552', ''],
+  ['Riza Karaca', '06 16655764', ''],
+  ['Boaz van Wijk', '06 39673100', ''],
+  ['Volkan Aslan', '06 16252221', ''],
+];
+// Kara listedekiler: gelmeyip cezayı ödemeyenler
+const DEMO_BLACKLIST = {
+  'Burak Şahin': 'Üst üste 3 kez gelmedi, cezaları ödemedi',
+  'Jesse Koster': 'Randevuya gelmedi, telefonu açmıyor',
+  'Yusuf Çelik': 'Personele kaba davrandı + açık ceza',
+};
+// Ödemeyi geciktirenler (açık ceza, henüz kara listede değil)
+const DEMO_LATE = ['Milan Peters', 'Stijn van Leeuwen'];
+
+function mulberry32(a) {
+  return () => { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+
+async function clearDemo() {
+  const custSub = 'SELECT id FROM customers WHERE is_demo = 1';
+  const apptSub = `SELECT id FROM appointments WHERE is_demo = 1 OR customer_id IN (${custSub})`;
+  await db().batch([
+    `DELETE FROM penalties WHERE is_demo = 1 OR customer_id IN (${custSub}) OR appointment_id IN (${apptSub})`,
+    `DELETE FROM appointments WHERE is_demo = 1 OR customer_id IN (${custSub})`,
+    'DELETE FROM customers WHERE is_demo = 1',
+  ], 'write');
+}
+
+async function seedDemo() {
+  await clearDemo();
+  const rnd = mulberry32(20260412);
+  const pick = (arr) => arr[Math.floor(rnd() * arr.length)];
+  const today = todayStr();
+  const nowMin = nowMinutesNL();
+  const hours = JSON.parse(await getSetting('hours'));
+  const barbers = (await q('SELECT id FROM barbers WHERE active = 1 ORDER BY id')).map((b) => b.id);
+  const services = await q('SELECT id, name, duration_min FROM services WHERE active = 1 ORDER BY id');
+  const byName = (n) => services.find((s) => s.name === n);
+  // Popüler hizmetler daha sık gelsin
+  const weighted = [];
+  for (const s of services) {
+    const w = { 'Heren knippen': 6, 'Knippen + Baard': 4, 'Baard modelleren': 3, 'Tondeuse': 2, 'The Full Service': 2, 'Hot towel scheren': 2, 'Kinderen t/m 12': 2, 'Studenten': 2 }[s.name] || 1;
+    for (let i = 0; i < w; i++) weighted.push(s);
+  }
+
+  // Müşteriler
+  await db().batch(DEMO_CUSTOMERS.map(([name, phone, notes], i) => ({
+    sql: "INSERT INTO customers(name, phone, notes, is_demo, created_at, blacklisted, blacklist_reason, blacklisted_at) VALUES (?,?,?,1,?,?,?,?)",
+    args: [name, phone, notes, addDays(today, -300 + i * 4) + ' 10:00:00',
+      DEMO_BLACKLIST[name] ? 1 : 0, DEMO_BLACKLIST[name] || '', DEMO_BLACKLIST[name] ? new Date(Date.now() - (i % 5 + 2) * 86400000).toISOString() : null],
+  })), 'write');
+  const custRows = await q('SELECT id, name FROM customers WHERE is_demo = 1');
+  const cid = Object.fromEntries(custRows.map((c) => [c.name, c.id]));
+  const regulars = DEMO_CUSTOMERS.map((c) => c[0]).filter((n) => !DEMO_BLACKLIST[n]);
+  const troubled = [...Object.keys(DEMO_BLACKLIST), ...DEMO_LATE];
+
+  // Randevular: 21 gün geri, 14 gün ileri
+  const appts = [];
+  for (let off = -21; off <= 14; off++) {
+    const date = addDays(today, off);
+    const h = hours[new Date(date + 'T00:00:00').getDay()];
+    if (!h) continue;
+    const open = toMin(h[0]), close = toMin(h[1]);
+    const fill = off < 0 ? 0.62 : off === 0 ? 0.75 : Math.max(0.2, 0.62 - off * 0.04); // ileri tarihler seyrekleşir
+    for (const barber of barbers) {
+      let t = open + pick([0, 0, 15, 30]);
+      while (t < close) {
+        const svc = pick(weighted);
+        if (t + svc.duration_min > close) break;
+        if (rnd() < fill) {
+          const isPast = off < 0 || (off === 0 && t + svc.duration_min <= nowMin);
+          let status = 'scheduled';
+          if (isPast) { const r = rnd(); status = r < 0.03 ? 'no_show' : r < 0.07 ? 'cancelled' : 'completed'; }
+          else if (rnd() < 0.05) status = 'cancelled';
+          appts.push({ date, off, start: toHHMM(t), dur: svc.duration_min, barber, svc: svc.id, status, cust: pick(regulars) });
+          t += svc.duration_min + pick([0, 0, 0, 15]);
+        } else {
+          t += pick([15, 30, 45]);
+        }
+      }
+    }
+  }
+  // Sorunlu müşteriler: geçmişte birkaç "gelmedi", berber ve saat aynen kalır
+  const pastDone = appts.filter((a) => a.off < -1 && a.status === 'completed');
+  const usedIdx = new Set();
+  troubled.forEach((name) => {
+    const count = DEMO_BLACKLIST[name] ? (name === 'Burak Şahin' ? 3 : 2) : 1;
+    for (let j = 0; j < count; j++) {
+      let i = Math.floor(rnd() * pastDone.length);
+      while (usedIdx.has(i)) i = (i + 1) % pastDone.length;
+      usedIdx.add(i);
+      Object.assign(pastDone[i], { cust: name, status: 'no_show' });
+    }
+    // Kara listede olmayanlar ayrıca normal randevularda da görünsün
+    if (!DEMO_BLACKLIST[name]) {
+      const fut = appts.filter((a) => a.off > 0 && a.status === 'scheduled');
+      if (fut.length) pick(fut).cust = name;
+    }
+  });
+  // Bugünün bekleyen randevularından biri not'lu olsun
+  const todayNext = appts.find((a) => a.off === 0 && a.status === 'scheduled');
+  if (todayNext) todayNext.note = 'Telefonla aradı, 5 dk gecikebilir';
+  const vz = byName('Vader + Zoon');
+  const fut2 = appts.find((a) => a.off >= 1 && a.status === 'scheduled' && vz);
+  if (fut2) Object.assign(fut2, { cust: 'Emre Demir', svc: vz.id, note: 'Oğlu da kesilecek' });
+
+  await db().batch(appts.map((a) => ({
+    sql: 'INSERT INTO appointments(customer_id, barber_id, service_id, date, start_time, duration_min, status, note, is_demo, created_at) VALUES (?,?,?,?,?,?,?,?,1,?)',
+    args: [cid[a.cust], a.barber, a.svc, a.date, a.start, a.dur, a.status, a.note || '', addDays(a.date, -(3 + Math.floor(rnd() * 10))) + ' 12:00:00'],
+  })), 'write');
+
+  // Cezalar: kara liste + geciktirenler açık; diğerleri ağırlıklı ödendi, bazıları affedildi
+  const fee = Number(await getSetting('no_show_fee_cents')) || 2500;
+  const ns = await q("SELECT a.id, a.customer_id, a.date, c.name FROM appointments a JOIN customers c ON c.id = a.customer_id WHERE a.is_demo = 1 AND a.status = 'no_show' ORDER BY a.date");
+  await db().batch(ns.map((a, i) => {
+    let status = troubled.includes(a.name) ? 'open' : (i % 5 === 3 ? 'waived' : 'paid');
+    if (status === 'paid' && a.date >= addDays(today, -2)) status = 'open'; // yeni olanlar henüz ödenmemiş
+    return {
+      sql: 'INSERT INTO penalties(customer_id, appointment_id, amount_cents, reason, status, created_at, resolved_at, is_demo) VALUES (?,?,?,?,?,?,?,1)',
+      args: [a.customer_id, a.id, fee, 'no_show', status, a.date + ' 19:00:00', status === 'open' ? null : addDays(a.date, 2) + 'T14:00:00.000Z'],
+    };
+  }), 'write');
 }
 let readyPromise;
 const ensureReady = () => (readyPromise ||= initDb());
@@ -214,7 +401,15 @@ async function handle(method, pathname, query, body, token) {
       no_show_fee_cents: Number(await getSetting('no_show_fee_cents')),
       hours: JSON.parse(await getSetting('hours')),
       today: todayStr(),
+      demo_mode: (await getSetting('demo_mode')) === '1',
     } };
+  }
+
+  if (method === 'POST' && pathname === '/demo') {
+    const on = !!(body || {}).on;
+    if (on) await seedDemo(); else await clearDemo();
+    await setSetting('demo_mode', on ? '1' : '0');
+    return { status: 200, data: { demo_mode: on } };
   }
 
   if (method === 'GET' && pathname === '/appointments') {
@@ -270,7 +465,7 @@ async function handle(method, pathname, query, body, token) {
       await run('UPDATE appointments SET status = ? WHERE id = ?', [b.status, id]);
       if (b.status === 'no_show' && appt.status !== 'no_show') {
         const fee = Number(await getSetting('no_show_fee_cents'));
-        await run('INSERT INTO penalties(customer_id, appointment_id, amount_cents, reason) VALUES (?,?,?,?)', [appt.customer_id, id, fee, 'no_show']);
+        await run('INSERT INTO penalties(customer_id, appointment_id, amount_cents, reason, is_demo) VALUES (?,?,?,?,?)', [appt.customer_id, id, fee, 'no_show', appt.is_demo || 0]);
       }
       if (appt.status === 'no_show' && b.status !== 'no_show') {
         await run("DELETE FROM penalties WHERE appointment_id = ? AND status = 'open'", [id]);
@@ -447,4 +642,4 @@ async function handle(method, pathname, query, body, token) {
   return { status: 404, data: { error: 'not found' } };
 }
 
-module.exports = { handle };
+module.exports = { handle, seedDemo, clearDemo, ensureReady };
